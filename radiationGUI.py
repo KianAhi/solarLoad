@@ -217,7 +217,9 @@ def popup_get_date(start_mon=None, start_day=None, start_year=None, end_month=No
 
 
 
-
+def initialGUI():
+    layout = [[]]
 
 if __name__ == "__main__":
-    print(popup_get_date(start_day=1,start_mon=1,start_year=2021,end_day=31,end_month=12,end_year=2021))
+    initialGUI()
+    #print(popup_get_date(start_day=1,start_mon=1,start_year=2021,end_day=31,end_month=12,end_year=2021))
