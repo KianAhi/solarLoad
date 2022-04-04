@@ -4,6 +4,7 @@ sys.path.append("../data")
 from defaultValues import * 
 
 def mainScreen():
+    layout = []
     pass
 
 
