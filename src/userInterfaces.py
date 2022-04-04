@@ -3,6 +3,10 @@ import sys
 sys.path.append("../data")
 from defaultValues import * 
 
+def mainScreen():
+    pass
+
+
 def startScreen():
     pvgOptions = [[sg.Text("Latitude"), sg.Multiline(default_text=defaultLat, key="-LAT-", size = (10,1)), 
                 sg.Text("Longitude"), sg.Multiline(default_text = defaultLon, key="-LON-", size = (10,1))],
