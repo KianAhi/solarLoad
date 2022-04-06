@@ -1,6 +1,10 @@
-defaultLat =  0
-defaultLon =  0
-defaultTech = "crystSi"
-defaultPp = 1
-defaultLoss = 1
-defaultEnergyPrice = 0.005
+from zlib import Z_DEFAULT_STRATEGY
+
+
+DEFAULTLAT =  0
+DEFAULTLON =  0
+DEFAULTTECH = "crystSi"
+DEFAULTPP = 1
+DEFAULTLOSS = 1
+DEFAULTENERGYPRICE = 0.005
+

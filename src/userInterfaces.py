@@ -4,22 +4,21 @@ sys.path.append("../data")
 from defaultValues import * 
 
 def mainScreen():
-    layout = []
     pass
 
 
 def startScreen():
-    pvgOptions = [[sg.Text("Latitude"), sg.Multiline(default_text=defaultLat, key="-LAT-", size = (10,1)), 
-                sg.Text("Longitude"), sg.Multiline(default_text = defaultLon, key="-LON-", size = (10,1))],
+    pvgOptions = [[sg.Text("Latitude"), sg.Multiline(default_text=DEFAULTLAT, key="-LAT-", size = (10,1)), 
+                sg.Text("Longitude"), sg.Multiline(default_text = DEFAULTLON, key="-LON-", size = (10,1))],
                 [sg.Frame("PV Technology",[[sg.Radio("crystSi","technology",key='crystSi'),
                                             sg.Radio("CIS","technology",key='CIS'),
                                             sg.Radio("CdTe","technology",key='CdTe'),
                                             sg.Radio("Unknown","technology",key='Unknown')]], border_width=1)],
-                [sg.Text("Peak Power"), sg.Multiline(default_text=defaultPp, key="-PP-", size = (10,1)),
-                sg.Text("Loss"), sg.Multiline(default_text=defaultLoss, key="-LOSS-" ,size=(10,1))  ],
+                [sg.Text("Peak Power"), sg.Multiline(default_text=DEFAULTPP, key="-PP-", size = (10,1)),
+                sg.Text("Loss"), sg.Multiline(default_text=DEFAULTLOSS, key="-LOSS-" ,size=(10,1))  ],
     ]
 
-    ecoOptions = [[sg.Text("cent/kWh"),sg.Multiline(default_text=defaultEnergyPrice, key="-ENERGY_PRICE-")]
+    ecoOptions = [[sg.Text("cent/kWh"),sg.Multiline(default_text=DEFAULTENERGYPRICE, key="-ENERGY_PRICE-")]
 
 
     ]
