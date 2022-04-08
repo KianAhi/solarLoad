@@ -2,6 +2,12 @@ import requests
 
 class PVGIS:
     def __init__(self, version='5.2', tool_name="PVcalc"):
+        """initializing the pvgis API object
+        
+        Args:
+            version (str, optional): version of the PVGIS API. Defaults to '5.2'.
+            tool_name (str, optional): which tool to use. Defaults to "PVcalc".
+        """
         self.base_url = self.pvgis_url(version)
         self.tool = self.check_tool_name(tool_name)
         self.data = None
@@ -36,6 +42,18 @@ class PVGIS:
         }
         
     def pvgis_url(self, version):
+        """returns correct api url for supplied version
+        
+        Args:
+            version (string): version
+        
+        Raises:
+            ValueError: if an incorrect version number is supplied raise error
+        
+        Returns:
+            str: api base url
+        """
+        
         if version == "5.1":
             return "https://re.jrc.ec.europa.eu/api/v5_1/"
         elif version == "5.2":
@@ -44,22 +62,54 @@ class PVGIS:
             raise ValueError("PVGIS only supports version 5.1 and 5.2! You have given version %s" % version)
     
     def check_tool_name(self, tool_name):
+        """checks if supplied tool is an option in the PVGIS API
+        
+        Args:
+            tool_name (str): tool name
+        
+        Raises:
+            ValueError: if an incorrect tool name is supplied raise error
+        
+        Returns:
+            str: tool name
+        """
+        
         if tool_name in ["PVcalc", "SHScalc", "MRcalc", "DRcalc", "seriescalc", "tmy", "printhorizon"]:
             return tool_name
         else:
             raise ValueError("%s is not a correct tool name for use with PVGIS!")
     
     def set_value(self, key, value):
+        """simple helper function to get IO with the api_inputs in the object
+        
+        Args:
+            key (str): key of api_inputs
+            value (*): value for key in api_inputs
+        
+        Raises:
+            TypeError: if wrong type
+            KeyError: if key is not in api_inputs
+        """
+        
         try:
             if isinstance(value, self.api_inputs[key][0]):
                 self.api_inputs[key][2] = value
                 self.api_inputs[key][1] = True
             else:
-                raise ValueError("%s is not of type %s" % (value, self.api_inputs[key][0]))
+                raise TypeError("%s is not of type %s" % (value, self.api_inputs[key][0]))
         except KeyError:
             raise KeyError("%s is not a key of api_inputs!" % key)
     
     def generate_api_string(self):
+        """generates the api string for further use in the api request
+
+        Raises:
+            ValueError: checks for unset but mandatory variables
+
+        Returns:
+            str: api request url
+        """
+        
         input_list = []
         inputs_to_set = []
         for input in self.api_inputs:
@@ -74,24 +124,34 @@ class PVGIS:
         return self.base_url + self.tool + '?' + '&'.join(input_list)
     
     def send_api_request(self):
+        """sends the api request and saves the returned JSON object in self.data"""
         api_request_url = self.generate_api_string()
         r = requests.get(api_request_url)
         self.data = r.json()
     
     def get_data(self, print_output=False):
-        data_list = {}
+        """parses the JSON object which is sent from the API and supplies the user with a selection of the data
+
+        Args:
+            print_output (bool, optional): toggle direct printing. Defaults to False.
+
+        Returns:
+            dict: dictionary of the parsed JSON data
+        """
+        
+        data_dict = {}
         for variable in self.data['outputs']['totals']['fixed']:
             numerical_data = self.data['outputs']['totals']['fixed'][variable]
             numerical_unit = self.data['meta']['outputs']['totals']['variables'][variable]['units']
             data_description = self.data['meta']['outputs']['totals']['variables'][variable]['description']
-            data_list[variable] = [numerical_data, str(numerical_data) + " " + numerical_unit, data_description]
+            data_dict[variable] = [numerical_data, str(numerical_data) + " " + numerical_unit, data_description]
         
         if print_output:
-            for dp in data_list.keys():
-                print("%s = %s "% (dp, data_list[dp][1]))
-                print(data_list[dp][2] + "\n---")
+            for dp in data_dict.keys():
+                print("%s = %s "% (dp, data_dict[dp][1]))
+                print(data_dict[dp][2] + "\n---")
         
-        return data_list
+        return data_dict
 
 if __name__ == "__main__":
     test = PVGIS()
