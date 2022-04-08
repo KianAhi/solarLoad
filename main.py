@@ -1,17 +1,18 @@
+from email.policy import default
 from re import X
 import sys
+
 sys.path.append("./src")
 sys.path.append("./data")
 import PySimpleGUI as sg
 
-import json
-from defaultValues import * 
 from userInterfaces import startScreen, mainScreen
 from pvgisApi import PVGIS
 
-
+from house import House
 
 if __name__ == "__main__":
-    mainScreen()
+    h = House()
+    startScreen([h])
 
     
