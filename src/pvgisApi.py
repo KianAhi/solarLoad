@@ -9,15 +9,15 @@ class PVGIS:
         self.api_inputs = {
             "lat": [float, True, None],
             "lon": [float, True, None],
-            "usehorizon": [[int, list], False, 1, [0, 1]],
-            "raddatabase": [str, False, "PVGIS-SARAH", ["PVGIS-SARAH", "PVGIS-NSRDB", "PVGIS-ERA5", "PVGIS-COSMO"]],
+            "usehorizon": [[int, list], True, 1, [0, 1]],
+            "raddatabase": [str, True, "PVGIS-SARAH", ["PVGIS-SARAH", "PVGIS-NSRDB", "PVGIS-ERA5", "PVGIS-COSMO"]],
             "peakpower": [float, True, None],
             "pvtechchoice": [str, False, "crystSi", ["crystSi", "CIS", "CdTe", "Unknown"]],
-            "mountingplace": [str, False, "free", ["free", "building"]],
+            "mountingplace": [str, True, "building", ["free", "building"]],
             "loss": [float, True, 14.0],
-            "fixed": [int, False, 1],
-            "angle": [float, False, 0],
-            "aspect": [float, False, 0],
+            "fixed": [int, True, 1],
+            "angle": [float, True, None],
+            "aspect": [float, True, None],
             "optimalinclination": [int, False, 0],
             "optimalangles": [int, False, 0],
             "inclined_axis": [int, False, 0],
@@ -32,7 +32,7 @@ class PVGIS:
             "interest": [float, False, None],
             "lifetime": [int, False, 25],
             "outputformat": [str, True, "json"],
-            "browser": [int, False, 0]
+            "browser": [int, True, 0]
         }
         
     def pvgis_url(self, version):
@@ -79,17 +79,17 @@ class PVGIS:
         self.data = r.json()
     
     def get_data(self, print_output=False):
-        data_list = []
+        data_list = {}
         for variable in self.data['outputs']['totals']['fixed']:
             numerical_data = self.data['outputs']['totals']['fixed'][variable]
             numerical_unit = self.data['meta']['outputs']['totals']['variables'][variable]['units']
             data_description = self.data['meta']['outputs']['totals']['variables'][variable]['description']
-            data_list.append([variable, str(numerical_data) + " " + numerical_unit, data_description])
+            data_list[variable] = [numerical_data, str(numerical_data) + " " + numerical_unit, data_description]
         
         if print_output:
-            for dp in data_list:
-                print("%s = %s "% (dp[0], dp[1]))
-                print(dp[2] + "\n---")
+            for dp in data_list.keys():
+                print("%s = %s "% (dp, data_list[dp][1]))
+                print(data_list[dp][2] + "\n---")
         
         return data_list
 
@@ -98,6 +98,8 @@ if __name__ == "__main__":
     test.set_value("lat", 49.357)
     test.set_value("lon", 6.725)
     test.set_value("peakpower", 1.0)
+    test.set_value("angle", 35.0)
+    test.set_value("aspect", 0.0)
     test.set_value("optimalinclination", 1)
     test.set_value("optimalangles", 1)
     test.send_api_request()
