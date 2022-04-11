@@ -3,12 +3,13 @@ import yaml
 import pvgisApi
 
 class House:
+
     def __init__(self, yaml_path=None):
         """load object variables from a .yaml file
         if a path to a .yaml file is passed use it, otherwise load the defaultValues.yaml
         """
         if yaml_path == None:
-            yaml_path = os.path.join(os.path.dirname(__file__),"../data/defaultValues.yaml")
+            yaml_path = os.path.join(os.path.dirname(__file__), "../data/defaultValues.yaml")
         try:
             with open(yaml_path, 'r') as stream:
                 index = "config"
