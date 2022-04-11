@@ -13,22 +13,12 @@ from house import House
 
 def main():
     screenChoice = splashScreen()
-    first = True
-    while True:
-        if screenChoice == "compare":
-            if first:
-                houses = [House()]
-                first = False
-
-            check = startScreen(houses)
-            if type(check) == list:
-                screenChoice = "mainScreen"
-            elif check == "reset":
-                first = True
-        elif screenChoice == "gridScreen":
-            break
-        elif screenChoice == "mainScreen":
-            break
+    if screenChoice == "compareScreen":
+        houses = startScreen([House()])
+        for house in houses:
+            house.calculate_peak_power()
+            house.create_pv()
+            house.simulate_pv()
 
 
 if __name__ == "__main__":

@@ -127,6 +127,7 @@ class PVGIS:
         """sends the api request and saves the returned JSON object in self.data"""
         api_request_url = self.generate_api_string()
         r = requests.get(api_request_url)
+        r.raise_for_status() ##BUG Added this line. API seems to be down or I am doing a mistake while calling this
         self.data = r.json()
     
     def get_data(self, print_output=False):

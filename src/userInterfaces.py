@@ -20,7 +20,7 @@ def splashScreen():
             exit()
         elif event == "-COMP-":
             window.close()
-            screen = "compare"
+            screen = "compareScreen"
             break
         elif event == "-GRID-":
             window.close()
@@ -53,7 +53,7 @@ def fromGUItoClass(window, houses):
 
             for key in window.key_dict:
                 if key == (i, f"-{str(attr)}-"):
-                    setattr(house, attr, window[key].get())
+                    setattr(house, attr, float(window[key].get()))
     return houses
     
 
@@ -136,5 +136,7 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
         if event == "-SAVE-":
             pass
         if event == "-START-":
-            return fromGUItoClass(window,houses)
+            ret = fromGUItoClass(window,houses)
+            window.close()
+            return ret 
             # #popup_get_date(start_day=1, start_mon=1, start_year=2021, end_day=31, end_month=12, end_year=2021)
