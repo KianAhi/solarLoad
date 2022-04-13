@@ -4,7 +4,7 @@ import pvgisApi
 
 class House:
 
-    def __init__(self, yaml_path=None):
+    def __init__(self, yaml_path=None, index="default" ):
         """load object variables from a .yaml file
         if a path to a .yaml file is passed use it, otherwise load the defaultValues.yaml
         """
@@ -12,7 +12,6 @@ class House:
             yaml_path = os.path.join(os.path.dirname(__file__), "../data/defaultValues.yaml")
         try:
             with open(yaml_path, 'r') as stream:
-                index = "config"
                 try:
                     load = yaml.safe_load(stream)
                     for key in load[index]:
@@ -22,7 +21,7 @@ class House:
         except FileNotFoundError as Err:
             print("There is no .yaml file at %s" % yaml_path)
             raise
-    
+        self.yamlIndex = index
     def calculate_peak_power(self):
         """calculate the peak power from the roof area and the watt peak per m^2 of
         the solar cell technology. (wattpeak can be used to test different technologies)

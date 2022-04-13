@@ -1,8 +1,89 @@
+from typing import final
+from weakref import finalize
 import PySimpleGUI as sg
 import sys
 sys.path.append("../data")
 from house import House
+import yaml
+import os
 
+def saveConfigQuestionnaire(amountHouses, oldNames):
+    layout = [[sg.Text("Select the Home you want to save as new config and give it a name")],
+    [sg.Text("Specify a Name for the new config") ,sg.Multiline(default_text="", key="-CONFIG-", expand_x=True, enter_submits=True)]]
+    layout += [[sg.Radio(f"House {houseSelection+1}", group_id="house", key=houseSelection) for houseSelection in range(0,amountHouses)]]
+    layout += [[sg.B("OK", s=10, key="-OK-"), sg.B("Cancel", s=10, key="-EXIT_POPUP-")]]
+
+    window = sg.Window('Config Saver', layout, finalize=True)
+    window[0].update(True)
+
+    while True:
+        event, value = window.read()
+        if event == "-OK-" or event == "-CONFIG-":
+            if len(window['-CONFIG-'].get()) > 0:
+                if window['-CONFIG-'].get() in oldNames:
+                    sg.popup_ok("Config Name already exists. Please chooose another name")
+                    continue
+                for c in range(0,amountHouses):
+                    if window[c].get() == True:
+                        returnValue = window['-CONFIG-'].get().strip()
+                        window.close()
+                        return (c, returnValue)
+            else:
+                sg.popup_ok("Config name can't be empty",title="ERROR")
+        elif event == "-EXIT_POPUP-":
+            return (None, None)
+
+def saveNewConfig(window, houses, yaml_path = None , houseSelection = 0):
+    maxConfigs = 10
+    if yaml_path == None:
+        yaml_path = os.path.join(os.path.dirname(__file__), "../data/defaultValues.yaml")
+
+    with open(yaml_path, 'r') as stream:
+        index = "default"
+        try:
+            load = yaml.safe_load(stream)
+            keyList = [key for key in load[index]]
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    presentConfigs = [key for key in load]
+    strippedConfigs = presentConfigs.copy()
+    strippedConfigs.remove("default")
+    houseSelection, configName = saveConfigQuestionnaire(len(houses), presentConfigs)
+
+
+    if houseSelection == None:
+        return
+
+    configName = configName.replace(" ","_")
+
+    if len(load) == maxConfigs:
+        layout = [[sg.Text(f"There are more than {maxConfigs} present, already. \n Please choose one to be deleted")],
+        [sg.Combo(strippedConfigs, default_value = strippedConfigs[0], expand_x = True, key="DDLIST")],
+        [sg.Button("OK",key="-OK-"), sg.Button("Cancel")]
+        ]
+        popup_window = sg.Window("Choose configs",layout,finalize=True)
+        while True:
+            events, _ = popup_window.read()
+            if events == "-OK-":
+                load.pop(popup_window["DDLIST"].get())
+                popup_window.close()
+                break
+            else:
+                return
+    
+    load[configName] = {}
+    for variable in keyList:
+        if variable == "TECH":
+            for tech in [(houseSelection, "crystSi"), (houseSelection, "CIS") , (houseSelection, "CdTe"), (houseSelection, "Unknown")]:
+                if window[tech].get() == True:
+                    load[configName]["TECH"] = str(tech[1])
+        for key in window.key_dict:
+            if key == (houseSelection, f"-{str(variable)}-"):
+                load[configName][variable] = float(window[(houseSelection, f"-{str(variable)}-")].get())
+    with open(yaml_path, 'w') as file:
+        yaml.dump(load, file, sort_keys=False)
+    sg.popup_ok("New configuration saved succesfully!")
 
 def splashScreen():
     """Creates a splash screen for the user to choose different from two differnt applications
@@ -29,7 +110,6 @@ def splashScreen():
 def mainScreen():
     pass
 
-
 def fromGUItoClass(window, houses):
     """ Function to get all the Values untered in the GUI and update the corresponding class atributes
     Args: 
@@ -38,25 +118,25 @@ def fromGUItoClass(window, houses):
     Returns:
         list: houses
     """
-    for i, house in enumerate(houses):
-        for attr in dir(house):
-            if callable(getattr(house, attr)) and attr.startswith("__"):
+    for houseSelection, house in enumerate(houses):
+        for variable in dir(house):
+            if callable(getattr(house, variable)) and variable.startswith("__"):
                 continue
 
-            if attr == "TECH":
-                for tech in [(i, "crystSi"), (i, "CIS") , (i, "CdTe"), (i, "Unknown")]:
+            if variable == "TECH":
+                for tech in [(houseSelection, "crystSi"), (houseSelection, "CIS") , (houseSelection, "CdTe"), (houseSelection, "Unknown")]:
                     if window[tech].get() == True:
-                        setattr(house, attr, tech[1])
+                        setattr(house, variable, tech[1])
                         continue
 
             for key in window.key_dict:
-                if key == (i, f"-{str(attr)}-"):
-                    setattr(house, attr, float(window[key].get()))
+                if key == (houseSelection, f"-{str(variable)}-"):
+                    setattr(house, variable, float(window[key].get()))
     return houses
     
 
 
-def startScreen(houses, maxHouses = 5, pos = (None, None)):
+def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, yaml_path = None, valueTemplate = "default"):
     """Create the GUI for the User to input all the Values and start the API call
     Args:
         houses (list): list containing all instances of the House class
@@ -65,6 +145,17 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
     Returns:
         list: list containing all instance of the House class
     """
+    if configList == None:
+        if yaml_path == None:
+            yaml_path = os.path.join(os.path.dirname(__file__), "../data/defaultValues.yaml")
+        with open(yaml_path, 'r') as stream:
+            try:
+                load = yaml.safe_load(stream)
+                keyList = [key for key in load]
+            except yaml.YAMLError as exc:
+                print(exc)
+
+
     layout = [[]]
     counter = -1
     for house in houses:
@@ -98,16 +189,24 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
         tempLayout = [[sg.Frame("General Options", layout = generalOptions)]]
         tempLayout += [[sg.Frame("PVG API Options", layout = pvgOptions)]]
         tempLayout += [[sg.Frame("Economical Params" ,layout = ecoOptions)]]
+        tempLayout += [[sg.Combo(keyList, default_value = house.yamlIndex, key=(counter,"-CONFIGURATION-"), enable_events=True)]]
         layout[0].append(sg.Column([[sg.Frame(f"House {counter}", tempLayout)]]))
 
     layout += [[sg.Frame("",[[sg.Button("RUN",key="-START-" ), sg.Button("Exit",key="-EXIT-"),sg.Button("Reset",key="-RESET-"), sg.Button("Save as new Config",key="-SAVE-")]]),
     sg.Button("-",key="-SUB-",size=(2,1), ), sg.Button("+",key="-ADD-",size = (2,1))]]
 
+    # if valueTemplate != "default"
+    #     if counter == 1:
+    #         layout.insert(0, [sg.Combo(keyList, default_value = valueTemplate  ,key="-CONFIGUTATION-", enable_events=True)])
+    #     else:    
+    #         layout[len(layout)-1] +=  [sg.Combo(keyList, default_value = valueTemplate  ,key="-CONFIGUTATION-", enable_events=True)]
+
     window = sg.Window("PVGIS solarLoad", layout, keep_on_top=False, grab_anywhere=True, resizable=True,location=pos, finalize=True)
 
-
-    for i,house in enumerate(houses):
-        window[(i, house.TECH)].update(True)
+    configurationKeys = []
+    for houseSelection,house in enumerate(houses):
+        window[(houseSelection, house.TECH)].update(True)
+        configurationKeys.append((houseSelection,"-CONFIGURATION-")) 
 
     while True:
         event, values = window.read()
@@ -118,6 +217,13 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
             oldPos = window.current_location()
             window.close()
             startScreen(houses, oldPos)
+        if event in configurationKeys:
+            houses = fromGUItoClass(window, houses)
+            oldPos = window.current_location()
+            print(window[event].get()+ "_________")
+            houses[event[0]] = House(index = window[event].get() )
+            window.close()
+            return startScreen(houses, pos = oldPos)
         if event == "-ADD-":
             if len(houses) < maxHouses:
                 houses = fromGUItoClass(window, houses)
@@ -131,8 +237,9 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
                 houses = fromGUItoClass(window, houses)
                 oldPos = window.current_location()
                 window.close()
-                startScreen(houses, pos = oldPos)
+                return startScreen(houses, pos = oldPos)
         if event == "-SAVE-":
+            saveNewConfig(window,houses)
             pass
         if event == "-START-":
             ret = fromGUItoClass(window,houses)
