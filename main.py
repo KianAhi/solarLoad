@@ -11,13 +11,25 @@ from house import House
 
 def main():
     screenChoice = splashScreen()
-    if screenChoice == "compareScreen":
-        houses = startScreen([House()])
-        for house in houses:
-            house.calculate_peak_power()
-            house.create_pv()
-            house.simulate_pv()
+    compareScreen()
 
+def compareScreen(houses = None):
+    if houses == None:
+        houses = startScreen([House()])
+    else:
+        houses = startScreen(houses)
+    for i, house in enumerate(houses):
+        house.calculate_peak_power()
+        house.create_pv()
+        errorCheck = house.simulate_pv()
+        if errorCheck != 0:
+            choice, _ = sg.Window('Continue?', [[sg.T(f"{errorCheck} in house {i+1}")], [sg.B("Try again", s=10, key="-AGAIN-"), sg.B("New start", s=10, key="-NEW-"), sg.B("Exit", s=10, key="-EXIT_POPUP-")]], disable_close=True).read(close=True)
+            if choice == "-AGAIN-":
+                compareScreen(houses)
+            elif choice == "-NEW-":
+                main()
+            elif choice == "-EXIT_POPUP-":
+                exit()
 
 if __name__ == "__main__":
     main()

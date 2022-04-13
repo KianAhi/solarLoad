@@ -8,6 +8,7 @@ matplotlib = "==3.0.3"
 pyyaml = "*"
 requests = "*"
 pysimplegui = "*"
+numpy = "*"
 
 [dev-packages]
 

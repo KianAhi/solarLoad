@@ -2,15 +2,15 @@ config:
     LAT: 0.0
     LON: 0.0
     TECH: "crystSi"
-    PP: 1
-    LOSS: 1
+    PP: 1.0
+    LOSS: 1.0
     ENERGYPRICE: 0.005
     SLOPE: 0.0
     AZIMUTH: 0.0
-    ROOFSIZE: 0.0
+    ROOFSIZE: 1.0
     SHARE: 0.0
     INVESTMENTBYOWNER: 0.0
-    WATTPEAK: 0.0
+    WATTPEAK: 1.0
     PVCOSTS: 0.0
     ADDITIONALCOSTS: 0.0
     CONNECTIONCOSTS: 0.0

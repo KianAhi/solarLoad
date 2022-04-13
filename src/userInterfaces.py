@@ -111,7 +111,7 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
 
     while True:
         event, values = window.read()
-        if event in  (sg.WIN_CLOSED,"-EXIT-"):
+        if event in  (sg.WIN_CLOSED, "-EXIT-"):
             exit()
         if event == "-RESET-":
             houses = [House()]
@@ -124,7 +124,7 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
                 houses.append(House())
                 oldPos = window.current_location()
                 window.close()
-                startScreen(houses, pos = oldPos)
+                return startScreen(houses, pos = oldPos)
         if event == "-SUB-":
             if len(houses) != 1:
                 houses.pop()

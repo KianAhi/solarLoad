@@ -53,8 +53,13 @@ class House:
         """creates a virtual pv system from the object variables, sends the API request and saves the returned data
         in an object variable self.pv_data"""
         pv_system = self.create_pv()
-        pv_system.send_api_request()
-        self.pv_data = pv_system.get_data()
+        returnCheck = pv_system.send_api_request()
+        if returnCheck == 0:
+            self.pv_data = pv_system.get_data()
+            return 0
+        else:
+            return returnCheck
+        
     
     def check_for_data(self):
         """checking if the PV system has already been simulated. If not returns false and generates a print.
