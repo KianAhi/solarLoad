@@ -1,8 +1,6 @@
-from tracemalloc import start
 import PySimpleGUI as sg
 import sys
 sys.path.append("../data")
-from pvgisApi import PVGIS
 from house import House
 
 
@@ -117,8 +115,9 @@ def startScreen(houses, maxHouses = 5, pos = (None, None)):
             exit()
         if event == "-RESET-":
             houses = [House()]
+            oldPos = window.current_location()
             window.close()
-            startScreen(houses)
+            startScreen(houses, oldPos)
         if event == "-ADD-":
             if len(houses) < maxHouses:
                 houses = fromGUItoClass(window, houses)
