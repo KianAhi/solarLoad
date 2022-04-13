@@ -1,5 +1,3 @@
-from typing import final
-from weakref import finalize
 import PySimpleGUI as sg
 import sys
 sys.path.append("../data")
