@@ -174,13 +174,16 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
         ]
 
         ecoOptions = [[sg.Frame("Returns",[
-            [sg.Text("Energy selling price"), sg.Multiline(default_text=house.ENERGYPRICE, key=(counter,"-ENERGYPRICE-"),size = (10,1)),sg.Text("c/kWh")],
+            [sg.Text("Energy selling price"), sg.Multiline(default_text=house.ENERGYPRICE, key=(counter,"-ENERGYPRICE-"),size = (10,1)),sg.Text("ct/kWh")],
             [sg.Text("Share to the prop. owner"), sg.Multiline(default_text=house.SHARE, key=(counter,"-SHARE-"),size = (10,1)),sg.Text("%")],
             [sg.Text("Investment of the prop. owner"), sg.Multiline(default_text=house.INVESTMENTBYOWNER, key=(counter,"-INVESTMENTBYOWNER-"),size=(10,1)), sg.Text("€") ]], border_width=1)],
             [sg.Frame("Costs",[
                 [sg.Text("PV-Costs"),sg.Multiline(default_text=house.PVCOSTS, key=(counter,"-PVCOSTS-"),size = (10,1)),sg.Text("€/m^2")],
                 [sg.Text("Mounting-costs"),sg.Multiline(default_text=house.MOUNTINGCOSTS, key=(counter,"-MOUNTINGCOSTS-"),size = (10,1)),sg.Text("€/m^2")],
                 [sg.Text("Connection costs"),sg.Multiline(default_text=house.CONNECTIONCOSTS, key=(counter,"-CONNECTIONCOSTS-"),size = (10,1)),sg.Text("€")],
+                [sg.Text("Hardware costs"),sg.Multiline(default_text=house.HARDWARECOSTS, key=(counter,"-HARDWARECOSTS-"),size = (10,1)),sg.Text("€")],
+                [sg.Text("Insurance costs"),sg.Multiline(default_text=house.INSURANCECOSTS, key=(counter,"-INSURANCECOSTS-"),size = (10,1)),sg.Text("€/year")],
+                [sg.Text("Storage"),sg.Multiline(default_text=house.STORAGECOSTS, key=(counter,"-STORAGECOSTS-"),size = (10,1)),sg.Text("€/kWh")],
                 [sg.Text("Additional costs"),sg.Multiline(default_text=house.ADDITIONALCOSTS, key=(counter,"-ADDITIONALCOSTS-"),size = (10,1)),sg.Text("€")],
                 ], border_width=1)],
         ]
