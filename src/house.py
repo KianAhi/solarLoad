@@ -28,13 +28,21 @@ class House:
     def plotGraph(self):
         """plotting the data from the PVGIS API
         """
-        y = np.linspace(0,20)
-        costs = self.investment_costs + self.running_costs * y
+        years = np.linspace(0,20)
+        costs = self.investment_costs + self.running_costs * years
+        
+        rev_list = []
+        for i,time in enumerate(years):
+            rev_list.append(self.revenue * i)
+        
+        profit_list = []
+        for i,time in enumerate(years):
+            profit_list.append(self.profit * i)
         
         plt.figure()
-        plt.plot(costs,y,label = "Costs")
-        plt.plot(self.revenue,y,label = "Revenue")
-        plt.plot(self.profit,y,label = "Profit")
+        plt.plot(years,costs,label = "Costs")
+        plt.plot(years,rev_list,label = "Revenue")
+        plt.plot(years,profit_list,label = "Profit")
         plt.legend()
         plt.show()
 
@@ -95,7 +103,7 @@ class House:
         """
         if self.check_for_data():
             try:
-                self.pv_data[case][0]
+                return self.pv_data[case][0]
             except KeyError as KeyExc:
                 print(KeyExc)
     
@@ -111,10 +119,10 @@ class House:
         inv_cost += self.ADDITIONALCOSTS
         inv_cost += self.STORAGECOSTS
         inv_cost += self.HARDWARECOSTS
-        inv_cost += self.OTHERCOSTS
+        inv_cost += self.ADDITIONALCOSTS
         inv_cost -= self.INVESTMENTBYOWNER
         #inv_cost += self.INSURANCECOSTS
-        
+        setattr(self, "investment_costs", inv_cost)
         return inv_cost
     
     def calculate_running_costs(self):
@@ -125,7 +133,7 @@ class House:
         """
         run_cost = (self.get_data_for_house('E_y') * self.ENERGYPRICE) * self.SHARE
         run_cost += self.INSURANCECOSTS
-        setattr(self, 'run_cost', run_cost)
+        setattr(self, 'running_costs', run_cost)
         return run_cost
     
     def calculate_revenue(self):
@@ -144,6 +152,6 @@ class House:
         Returns:
             float: profit
         """
-        profit = (self.get_data_for_house('E_y') * self.ENERGYPRICE) - self.running_costs()
+        profit = (self.get_data_for_house('E_y') * self.ENERGYPRICE) - self.running_costs
         setattr(self, 'profit', profit)
         return profit

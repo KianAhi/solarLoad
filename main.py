@@ -30,7 +30,12 @@ def compareScreen(houses = None):
             elif choice == "-NEW-":
                 main()
             elif choice == "-EXIT_POPUP-":
-                exit()            
+                exit()
+        house.calculate_investment_costs()
+        house.calculate_running_costs()
+        house.calculate_revenue()
+        house.calculate_profit()
+        house.plotGraph()
     mainScreen(houses)
 
 if __name__ == "__main__":
