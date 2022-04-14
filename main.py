@@ -18,6 +18,7 @@ def compareScreen(houses = None):
         houses = startScreen([House()])
     else:
         houses = startScreen(houses)
+
     for i, house in enumerate(houses):
         house.calculate_peak_power()
         house.create_pv()
@@ -29,7 +30,8 @@ def compareScreen(houses = None):
             elif choice == "-NEW-":
                 main()
             elif choice == "-EXIT_POPUP-":
-                exit()
+                exit()            
+    mainScreen(houses)
 
 if __name__ == "__main__":
     main()

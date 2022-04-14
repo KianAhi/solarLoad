@@ -1,7 +1,8 @@
 import os
 import yaml
 import pvgisApi
-
+import matplotlib.pyplot as plt
+import numpy as np
 class House:
 
     def __init__(self, yaml_path=None, index="default" ):
@@ -22,6 +23,21 @@ class House:
             print("There is no .yaml file at %s" % yaml_path)
             raise
         self.yamlIndex = index
+        self.houseName = None
+
+    def plotGraph(self):
+        """plotting the data from the PVGIS API
+        """
+        y = np.linspace(0,20)
+        costs = self.investment_costs + self.running_costs * y
+        
+        plt.figure()
+        plt.plot(costs,y,label = "Costs")
+        plt.plot(self.revenue,y,label = "Revenue")
+        plt.plot(self.profit,y,label = "Profit")
+        plt.legend()
+        plt.show()
+
     def calculate_peak_power(self):
         """calculate the peak power from the roof area and the watt peak per m^2 of
         the solar cell technology. (wattpeak can be used to test different technologies)
@@ -59,7 +75,6 @@ class House:
         else:
             return returnCheck
         
-    
     def check_for_data(self):
         """checking if the PV system has already been simulated. If not returns false and generates a print.
 
@@ -84,29 +99,45 @@ class House:
             except KeyError as KeyExc:
                 print(KeyExc)
     
-    def investment_costs(self):
+    def calculate_investment_costs(self):
         """calculates the investment costs
 
         Returns:
             float: investment costs per year
         """
         inv_cost = self.PVCOSTS * self.ROOFSIZE
-        inv_cost += self.MOUNTINGCOSTS * self.ROOFSIZE
+        inv_cost += self.MOUNTINGCOSTS 
         inv_cost += self.CONNECTIONCOSTS
         inv_cost += self.ADDITIONALCOSTS
+        inv_cost += self.STORAGECOSTS
+        inv_cost += self.HARDWARECOSTS
+        inv_cost += self.OTHERCOSTS
+        inv_cost -= self.INVESTMENTBYOWNER
+        #inv_cost += self.INSURANCECOSTS
         
         return inv_cost
     
-    def running_costs(self):
+    def calculate_running_costs(self):
         """calculates the running costs
 
         Returns:
             float: running costs per year
         """
         run_cost = (self.get_data_for_house('E_y') * self.ENERGYPRICE) * self.SHARE
-        
+        run_cost += self.INSURANCECOSTS
+        setattr(self, 'run_cost', run_cost)
         return run_cost
     
+    def calculate_revenue(self):
+        """calculate the revenue from selling power to the grid
+
+        Returns:
+            float: revenue
+        """
+        revenue = (self.get_data_for_house('E_y') * self.ENERGYPRICE)
+        setattr(self, 'revenue', revenue)
+        return revenue
+
     def calculate_profit(self):
         """calculate the profit which is the sales from selling power to the grid minus the "Pachtgebuehren"
 
@@ -114,5 +145,5 @@ class House:
             float: profit
         """
         profit = (self.get_data_for_house('E_y') * self.ENERGYPRICE) - self.running_costs()
-        
+        setattr(self, 'profit', profit)
         return profit

@@ -49,7 +49,6 @@ def saveNewConfig(window, houses, yaml_path = None , houseSelection = 0):
     strippedConfigs.remove("default")
     houseSelection, configName = saveConfigQuestionnaire(len(houses), presentConfigs)
 
-
     if houseSelection == None:
         return
 
@@ -83,6 +82,38 @@ def saveNewConfig(window, houses, yaml_path = None , houseSelection = 0):
         yaml.dump(load, file, sort_keys=False)
     sg.popup_ok("New configuration saved succesfully!")
 
+def fromGUItoClass(window, houses):
+    """ Function to get all the Values untered in the GUI and update the corresponding class atributes
+    Args: 
+        window (PySimpleGUI window object): the current window object
+        houses (list): list containing all instances of the House class
+    Returns:
+        list: houses
+    """
+    for houseSelection, house in enumerate(houses):
+        for variable in dir(house):
+            if callable(getattr(house, variable)) and variable.startswith("__"):
+                continue
+
+            if variable == "TECH":
+                for tech in [(houseSelection, "crystSi"), (houseSelection, "CIS") , (houseSelection, "CdTe"), (houseSelection, "Unknown")]:
+                    if window[tech].get() == True:
+                        setattr(house, variable, tech[1])
+                        continue
+
+            for key in window.key_dict:
+                if key == (houseSelection, f"-{str(variable)}-"):
+                    if key == (houseSelection, "-houseName-"):
+                        if window[key].get() == "None":
+                            house.houseName = "House" + str(houseSelection)
+                            setattr(house, variable, str(window[key].get()))
+                            continue
+                        else:
+                            setattr(house, variable, str(window[key].get()))
+                            continue
+                    setattr(house, variable, float(window[key].get()))
+    return houses    
+
 def splashScreen():
     """Creates a splash screen for the user to choose different from two differnt applications
     Returns:
@@ -105,34 +136,31 @@ def splashScreen():
             break
     return screen
 
-def mainScreen():
-    pass
+def mainScreen(houses, pos = (None,None), chosenHouse = 0):
+    buttonsColumn = [[sg.B("s",key="-1-")],[sg.B("s",key="-2-")],[sg.B("s",key="-3-")],[sg.B("s",key="-4-")],[sg.B("s",key="-5-")]]
+    buttonsRow = [[sg.B("s",key="-6-"),sg.B("s",key="-7-"), sg.B("s",key="-8-"), sg.B("s",key="-9-"), sg.B("s",key="-10-")]]
+    canvas = [[sg.Canvas(size=(500,500))]]
+    combined = canvas + buttonsRow
+    radioButtons = [[]]
+    radioKeys = tuple((counter, "houseSelection") for counter in range(0,len(houses)))
+    for i, house in enumerate(houses):
+        radioButtons += [[sg.Radio(house.houseName, group_id="house", key=radioKeys[i], enable_events=True )]]
 
-def fromGUItoClass(window, houses):
-    """ Function to get all the Values untered in the GUI and update the corresponding class atributes
-    Args: 
-        window (PySimpleGUI window object): the current window object
-        houses (list): list containing all instances of the House class
-    Returns:
-        list: houses
-    """
-    for houseSelection, house in enumerate(houses):
-        for variable in dir(house):
-            if callable(getattr(house, variable)) and variable.startswith("__"):
-                continue
-
-            if variable == "TECH":
-                for tech in [(houseSelection, "crystSi"), (houseSelection, "CIS") , (houseSelection, "CdTe"), (houseSelection, "Unknown")]:
-                    if window[tech].get() == True:
-                        setattr(house, variable, tech[1])
-                        continue
-
-            for key in window.key_dict:
-                if key == (houseSelection, f"-{str(variable)}-"):
-                    setattr(house, variable, float(window[key].get()))
-    return houses
+    tempLayout = [[sg.Column(buttonsColumn),sg.Column(combined), sg.Column(radioButtons)]]
+    layout = [[ (sg.Column( [[ sg.Frame(houses[chosenHouse].houseName, tempLayout, key="-FRAME-") ]] )) ]]
     
+    window = sg.Window("Plots", layout, keep_on_top=False, grab_anywhere=True, resizable=True,location=pos, finalize=True)
 
+    window[(chosenHouse,"houseSelection")].update(True)
+    
+    while True:
+        event, value = window.read()
+        if event in (sg.WIN_CLOSED, "-CLOSE-"):
+            exit()
+        if event in radioKeys:
+            pos = window.CurrentLocation()
+            window.close()
+            mainScreen(houses, pos, chosenHouse = event[0] )
 
 def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, yaml_path = None, valueTemplate = "default"):
     """Create the GUI for the User to input all the Values and start the API call
@@ -190,17 +218,13 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
         tempLayout = [[sg.Frame("General Options", layout = generalOptions)]]
         tempLayout += [[sg.Frame("PVG API Options", layout = pvgOptions)]]
         tempLayout += [[sg.Frame("Economical Params" ,layout = ecoOptions)]]
-        tempLayout += [[sg.Combo(keyList, default_value = house.yamlIndex, key=(counter,"-CONFIGURATION-"), enable_events=True)]]
+        tempLayout += [[sg.Combo(keyList, default_value = house.yamlIndex, key=(counter,"-CONFIGURATION-"), enable_events=True),
+        sg.Multiline(house.houseName,key=(counter,"-houseName-"),size = (10,1))]]
         layout[0].append(sg.Column([[sg.Frame(f"House {counter}", tempLayout)]]))
 
     layout += [[sg.Frame("",[[sg.Button("RUN",key="-START-" ), sg.Button("Exit",key="-EXIT-"),sg.Button("Reset",key="-RESET-"), sg.Button("Save as new Config",key="-SAVE-")]]),
     sg.Button("-",key="-SUB-",size=(2,1), ), sg.Button("+",key="-ADD-",size = (2,1))]]
 
-    # if valueTemplate != "default"
-    #     if counter == 1:
-    #         layout.insert(0, [sg.Combo(keyList, default_value = valueTemplate  ,key="-CONFIGUTATION-", enable_events=True)])
-    #     else:    
-    #         layout[len(layout)-1] +=  [sg.Combo(keyList, default_value = valueTemplate  ,key="-CONFIGUTATION-", enable_events=True)]
 
     window = sg.Window("PVGIS solarLoad", layout, keep_on_top=False, grab_anywhere=True, resizable=True,location=pos, finalize=True)
 
@@ -221,7 +245,6 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
         if event in configurationKeys:
             houses = fromGUItoClass(window, houses)
             oldPos = window.current_location()
-            print(window[event].get()+ "_________")
             houses[event[0]] = House(index = window[event].get() )
             window.close()
             return startScreen(houses, pos = oldPos)
@@ -241,9 +264,12 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
                 return startScreen(houses, pos = oldPos)
         if event == "-SAVE-":
             saveNewConfig(window,houses)
-            pass
         if event == "-START-":
-            ret = fromGUItoClass(window,houses)
+            ret = fromGUItoClass(window, houses)
             window.close()
             return ret 
             # #popup_get_date(start_day=1, start_mon=1, start_year=2021, end_day=31, end_month=12, end_year=2021)
+
+
+if __name__ == "__main__":
+    mainScreen([House(),House(),House()])

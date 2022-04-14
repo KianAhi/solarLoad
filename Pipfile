@@ -9,6 +9,7 @@ pyyaml = "*"
 requests = "*"
 pysimplegui = "*"
 numpy = "*"
+pillow = "*"
 
 [dev-packages]
 
