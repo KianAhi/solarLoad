@@ -10,6 +10,9 @@ requests = "*"
 pysimplegui = "*"
 numpy = "*"
 pillow = "*"
+pyexif = "*"
+piexif = "*"
+setuptools-scm = "*"
 
 [dev-packages]
 

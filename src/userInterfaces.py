@@ -5,6 +5,9 @@ from house import House
 import yaml
 import os
 
+
+
+
 def saveConfigQuestionnaire(amountHouses, oldNames):
     layout = [[sg.Text("Select the Home you want to save as new config and give it a name")],
     [sg.Text("Specify a Name for the new config") ,sg.Multiline(default_text="", key="-CONFIG-", expand_x=True, enter_submits=True)]]
@@ -29,6 +32,7 @@ def saveConfigQuestionnaire(amountHouses, oldNames):
             else:
                 sg.popup_ok("Config name can't be empty",title="ERROR")
         elif event == "-EXIT_POPUP-":
+            window.close()
             return (None, None)
 
 def saveNewConfig(window, houses, yaml_path = None , houseSelection = 0):
@@ -81,6 +85,7 @@ def saveNewConfig(window, houses, yaml_path = None , houseSelection = 0):
     with open(yaml_path, 'w') as file:
         yaml.dump(load, file, sort_keys=False)
     sg.popup_ok("New configuration saved succesfully!")
+
 
 def fromGUItoClass(window, houses):
     """ Function to get all the Values untered in the GUI and update the corresponding class atributes
@@ -136,31 +141,56 @@ def splashScreen():
             break
     return screen
 
-def mainScreen(houses, pos = (None,None), chosenHouse = 0):
+def mainScreen(houses, pos = (None,None), chosenHouse = 0, size = (500,500)):
     buttonsColumn = [[sg.B("s",key="-1-")],[sg.B("s",key="-2-")],[sg.B("s",key="-3-")],[sg.B("s",key="-4-")],[sg.B("s",key="-5-")]]
-    buttonsRow = [[sg.B("s",key="-6-"),sg.B("s",key="-7-"), sg.B("s",key="-8-"), sg.B("s",key="-9-"), sg.B("s",key="-10-")]]
-    canvas = [[sg.Canvas(size=(500,500))]]
+    buttonsRow = [[sg.B("Save Report",key="-SAVE-"),sg.B("Back to selection",key="-BACK-"), sg.B("s",key="-8-"), sg.B("s",key="-9-"), sg.B("s",key="-10-")]]
+    canvas = [[sg.Image(size=size, key="-IMAGE-")]]
     combined = canvas + buttonsRow
-    radioButtons = [[]]
-    radioKeys = tuple((counter, "houseSelection") for counter in range(0,len(houses)))
-    for i, house in enumerate(houses):
-        radioButtons += [[sg.Radio(house.houseName, group_id="house", key=radioKeys[i], enable_events=True )]]
+    checkBoxes = [[ sg.Frame("Export Houses", [[sg.Checkbox(house.houseName, key=(i,"-CHECKBOX-"), default=True) for i,house in enumerate(houses)]])]]
+    
+    radioButtons = [[ sg.Frame("Display House", [[sg.Radio(house.houseName, group_id="house", key=(i,"-houseSelection-"), enable_events=True ) for i,house in enumerate(houses)]]) ]]
 
-    tempLayout = [[sg.Column(buttonsColumn),sg.Column(combined), sg.Column(radioButtons)]]
+    buttonSidebar = radioButtons +  checkBoxes
+
+    tempLayout = [[sg.Column(buttonsColumn),sg.Column(combined), sg.Column(buttonSidebar)]]
     layout = [[ (sg.Column( [[ sg.Frame(houses[chosenHouse].houseName, tempLayout, key="-FRAME-") ]] )) ]]
     
     window = sg.Window("Plots", layout, keep_on_top=False, grab_anywhere=True, resizable=True,location=pos, finalize=True)
 
-    window[(chosenHouse,"houseSelection")].update(True)
-    
+    window[(chosenHouse,"-houseSelection-")].update(True)
+
+    figure = houses[chosenHouse].plotGraph(size = size)
+    window["-IMAGE-"].update(data=figure)
+
+    radioKeys = tuple((counter, "-houseSelection-") for counter in range(0,len(houses)))
     while True:
         event, value = window.read()
         if event in (sg.WIN_CLOSED, "-CLOSE-"):
             exit()
         if event in radioKeys:
+            chosenHouse = event[0]
+            window[(chosenHouse,"-houseSelection-")].update(True)
+            figure = houses[chosenHouse].plotGraph(size = size)
+            window["-IMAGE-"].update(data=figure)
+            window["-FRAME-"].update(houses[chosenHouse].houseName)
+            #pos = window.CurrentLocation()
+            #window.close()
+            # mainScreen(houses, pos, chosenHouse = event[0] )
+        if event == "-SAVE-":
+            path = sg.popup_get_folder("Save to:", default_path=os.getcwd())
+            addedHouses = []
+            for i in range(0,len(houses)):
+                if window[(i,"-CHECKBOX-")].get() == True:
+                    addedHouses.append(i)
+            if generateReport(houses, addedHouses, path) == 0:
+                sg.popup_quick("Report generated succesfully!", keep_on_top=True, keep_on_top_after_display=True, auto_close=True, auto_close_duration=2)
+        if event == "-BACK-":
             pos = window.CurrentLocation()
             window.close()
-            mainScreen(houses, pos, chosenHouse = event[0] )
+            return (houses, pos)
+
+def generateReport(houses, addedHouses, path = "./"):
+    pass
 
 def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, yaml_path = None, valueTemplate = "default"):
     """Create the GUI for the User to input all the Values and start the API call
@@ -202,7 +232,7 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
         ]
 
         ecoOptions = [[sg.Frame("Returns",[
-            [sg.Text("Energy selling price"), sg.Multiline(default_text=house.ENERGYPRICE, key=(counter,"-ENERGYPRICE-"),size = (10,1)),sg.Text("ct/kWh")],
+            [sg.Text("Energy selling price"), sg.Multiline(default_text=house.ENERGYPRICE, key=(counter,"-ENERGYPRICE-"),size = (10,1)),sg.Text("€/kWh")],
             [sg.Text("Share to the prop. owner"), sg.Multiline(default_text=house.SHARE, key=(counter,"-SHARE-"),size = (10,1)),sg.Text("%")],
             [sg.Text("Investment of the prop. owner"), sg.Multiline(default_text=house.INVESTMENTBYOWNER, key=(counter,"-INVESTMENTBYOWNER-"),size=(10,1)), sg.Text("€") ]], border_width=1)],
             [sg.Frame("Costs",[
