@@ -9,7 +9,6 @@ import numpy as np
 from PIL import Image, ExifTags
 import io
 import base64
-import pickle
 import json
 
 import piexif
@@ -222,7 +221,9 @@ class House:
     def metaDataToExif(self, images, filepath = "./"):
         """Writing the class instance's variables as metadata to an image file
         Read the Data:
-
+        exif_dict = piexif.load("./image.jpg")
+        user_comment = piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment])
+        d = json.loads(user_comment)
         """
         metaData = {}
         for variable in dir(self):
@@ -232,13 +233,19 @@ class House:
         exif_dict = {"0th": {}, "Exif": {}, "1st": {},
             "thumbnail": None, "GPS": {}}
         exif_dict["Exif"][piexif.ExifIFD.UserComment] = piexif.helper.UserComment.dump(
-            pickle.dumps(metaData),
+            json.dumps(metaData),
             encoding="unicode")
 
-        data = piexif.insert(
-            piexif.dump(exif_dict),
-        )
+        # data = piexif.insert(
+        #     piexif.dump(exif_dict),
+        # )
+        data = piexif.dump(exif_dict)
         images.save(filepath, exif=data)
+
 if __name__ == "__main__":
     a = House()
-    a.metaDataToExif(Image.new(500,500))
+    a.metaDataToExif(Image.new('RGB', (500, 500), 'green'), filepath="./image.jpg")
+    exif_dict = piexif.load("./image.jpg")
+    user_comment = piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment])
+    d = json.loads(user_comment)
+    print(d)
