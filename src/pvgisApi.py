@@ -125,12 +125,19 @@ class PVGIS:
     
     def send_api_request(self):
         """sends the api request and saves the returned JSON object in self.data"""
+        print("creating API URL string...")
         api_request_url = self.generate_api_string()
+        print("Sending API call...")
         r = requests.get(api_request_url)
         if r.status_code == 400:
+            print("reading API response...")
             return r.json()['message']
+        print("reading API response...")
         self.data = r.json()
         return 0
+    
+    def get_loss(self):
+        return 1 - abs(float(self.data['outputs']['totals']['fixed']['l_total'])/100.0)
     
     def get_data(self, print_output=False):
         """parses the JSON object which is sent from the API and supplies the user with a selection of the data
@@ -272,7 +279,7 @@ class PVDaily:
         self.data = r.json()
         return 0
     
-    def get_data(self):
+    def get_data(self, efficiency, peak_power):
         """parses the JSON object which is sent from the API and supplies the user with a selection of the data
 
         Args:
@@ -286,13 +293,11 @@ class PVDaily:
         for dp in self.data['outputs']['daily_profile']:
             month = dp['month']
             time = dp['time']
-            irradiance = dp['G(i)']
+            power = dp['G(i)'] * efficiency * peak_power / 1000.0
             if month in month_dict.keys():
-                print("%s is in %s" % (month, month_dict.keys()))
-                month_dict[month].append([time, irradiance])
+                month_dict[month].append([time, power])
             else:
-                print("%s is NOT in %s" % (month, month_dict.keys()))
-                month_dict[month] = [[time, irradiance]]
+                month_dict[month] = [[time, power]]
         
         self.month_dict = month_dict
         return month_dict
@@ -300,13 +305,19 @@ class PVDaily:
 
 if __name__ == "__main__":
     test = PVDaily()
+    test2 = PVGIS()
     # test = PVGIS()
     test.set_value("lat", 49.357)
     test.set_value("lon", 6.725)
-    # test.set_value("peakpower", 1.0)
     test.set_value("angle", 35.0)
     test.set_value("aspect", 0.0)
+    test2.set_value("lat", 49.357)
+    test2.set_value("lon", 6.725)
+    test2.set_value("peakpower", 1.0)
+    test2.set_value("angle", 35.0)
+    test2.set_value("aspect", 0.0)
     # test.set_value("optimalinclination", 1)
     # test.set_value("optimalangles", 1)
     test.send_api_request()
+    test2.send_api_request()
     # data = test.get_data(print_output=True)
