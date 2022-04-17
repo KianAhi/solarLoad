@@ -232,7 +232,9 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
         ]
 
         ecoOptions = [[sg.Frame("Returns",[
-            [sg.Text("Energy selling price"), sg.Multiline(default_text=house.ENERGYPRICE, key=(counter,"-ENERGYPRICE-"),size = (10,1)),sg.Text("€/kWh")],
+            [sg.Text("Energy selling price to Grid"), sg.Multiline(default_text=house.ENERGYPRICE_TO_GRID, key=(counter,"-ENERGYPRICE_TO_GRID-"),size = (10,1)),sg.Text("€/kWh")],
+            [sg.Text("Energy selling price from Grid"), sg.Multiline(default_text=house.ENERGYPRICE_FROM_GRID, key=(counter,"-ENERGYPRICE_FROM_GRID-"),size = (10,1)),sg.Text("€/kWh")],
+            [sg.Text("Energy selling price to User"), sg.Multiline(default_text=house.ENERGYPRICE_T0_USER, key=(counter,"-ENERGYPRICE_TO_USER-"),size = (10,1)),sg.Text("€/kWh")],
             [sg.Text("Share to the prop. owner"), sg.Multiline(default_text=house.SHARE, key=(counter,"-SHARE-"),size = (10,1)),sg.Text("%")],
             [sg.Text("Investment of the prop. owner"), sg.Multiline(default_text=house.INVESTMENTBYOWNER, key=(counter,"-INVESTMENTBYOWNER-"),size=(10,1)), sg.Text("€") ]], border_width=1)],
             [sg.Frame("Costs",[
@@ -297,7 +299,7 @@ def startScreen(houses, maxHouses = 5, pos = (None, None), configList = None, ya
         if event == "-START-":
             ret = fromGUItoClass(window, houses)
             window.close()
-            return ret 
+            return ret
             # #popup_get_date(start_day=1, start_mon=1, start_year=2021, end_day=31, end_month=12, end_year=2021)
 
 

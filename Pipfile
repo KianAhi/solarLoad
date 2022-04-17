@@ -4,13 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-matplotlib = "==3.0.3"
+matplotlib = "*"
 pyyaml = "*"
 requests = "*"
 pysimplegui = "*"
 numpy = "*"
 pillow = "*"
-pyexif = "*"
 piexif = "*"
 setuptools-scm = "*"
 

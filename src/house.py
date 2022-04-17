@@ -6,11 +6,10 @@ import pvgisApi
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasAgg
 import numpy as np
-from PIL import Image, ExifTags
+from PIL import Image
 import io
 import base64
 import json
-
 import piexif
 import piexif.helper
 
@@ -146,7 +145,7 @@ class House:
         Returns:
             float: running costs per year
         """
-        run_cost = (self.get_data_for_house('E_y') * self.ENERGYPRICE) * (self.SHARE/100)
+        run_cost = (self.get_data_for_house('E_y') * self.ENERGYPRICE_TO_GRID) * (self.SHARE/100)
         run_cost += self.INSURANCECOSTS
         setattr(self, 'running_costs', run_cost)
         return run_cost
@@ -157,7 +156,9 @@ class House:
         Returns:
             float: revenue
         """
-        revenue = (self.get_data_for_house('E_y') * self.ENERGYPRICE)
+        revenue = (self.get_data_for_house('E_y') * self.ENERGYPRICE_TO_GRID)
+        print(self.get_data_for_house('E_y'))
+        print(self.ENERGYPRICE_TO_GRID)
         setattr(self, 'revenue', revenue)
         return revenue
 
