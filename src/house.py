@@ -35,6 +35,22 @@ class House:
             raise
         self.yamlIndex = index
         self.houseName = None
+        ######
+        self.accumulatorStorage = 0 #kwH
+        self.gridUsageCosts = 0
+        self.accumulatorCap = 2 #kWh
+
+    def gridUsage(self, energyDiff):
+        """calculate the grid usage from the energyDifference
+
+        Args:
+            energyDiff (float): energyDifference in kWh
+
+        Returns:
+            float: grid usage in kWh
+        """
+        self.gridUsageCosts += energyDiff * self.GRIDCOSTS # €/kWh
+        self.energyDiff 
 
     def plotGraph(self, size = (500,500)):
         """plotting the data from the PVGIS API
