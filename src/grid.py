@@ -1,6 +1,8 @@
 import hydrogenStorage
 from datetime import date
 from pandas import date_range
+from calendar import monthrange
+
 def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2020,12,31)):
     # Average hourly data over one year
     #pvIn
@@ -27,7 +29,7 @@ def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2
         for month in year:
             for day in month:
                 for hour in day: # iterate over all 24 hours
-                    
+
                     for house in houses:
                         if house.pvIn[hour] > customerUsage[hour]:
                             if house.accumulatorStorage < house.accumulatorCap:
@@ -58,6 +60,7 @@ def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2
                                 energyDiff = 0
                         
     return houses, hydrogenStorage 
+
 
 
 if __name__ == "__main__":
