@@ -85,6 +85,31 @@ class House:
         """
         return self.ROOFSIZE * self.WATTPEAK/1000
     
+    def daily_power(self):
+        print("setting options...")
+        pvgis_api_obj = pvgisApi.PVDaily()
+        pvgis_api_obj.set_value('lat', self.LAT)
+        pvgis_api_obj.set_value('lon', self.LAT)
+        pvgis_api_obj.set_value('angle', self.SLOPE)
+        pvgis_api_obj.set_value('aspect', self.AZIMUTH)
+        
+        return pvgis_api_obj
+    
+    def simulate_daily(self):
+        print("creating meta-pv object...")
+        meta_pv = self.create_pv()
+        print("sending API request for meta-pv...")
+        meta_pv.send_api_request()
+        print("creating daily-pv object...")
+        pv_system = self.daily_power()
+        print("sending API request for daily-pv...")
+        returnCheck = pv_system.send_api_request()
+        if returnCheck == 0:
+            self.pv_daily = pv_system.get_data(meta_pv.get_loss(), self.calculate_peak_power())
+            return 0
+        else:
+            return returnCheck
+    
     def create_pv(self):
         """creating a pvgis object to get the data from the PVGIS API
 
@@ -290,8 +315,5 @@ class House:
 
 if __name__ == "__main__":
     a = House()
-    a.metaDataToExif(Image.new('RGB', (500, 500), 'green'), filepath="./image.jpg")
-    exif_dict = piexif.load("./image.jpg")
-    user_comment = piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment])
-    d = json.loads(user_comment)
-    print(d)
+    a.daily_power()
+    a.simulate_daily()
