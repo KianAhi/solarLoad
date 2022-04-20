@@ -10,7 +10,6 @@ def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2
     accumulatorStorage = 0
 
 
-
     if len(pvIn) =! 24:
         return "Error: pvIn must be a list of 24 values"
     if len(customerUsage) != 24:
