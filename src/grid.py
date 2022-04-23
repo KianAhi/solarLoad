@@ -14,6 +14,12 @@ class electricalGrid:
         self.time = {}
     
     def add_house(self, yaml_path=None, index="default"):
+        """adds a house to the list of houses of the electricalGrid class
+
+        Args:
+            yaml_path (str, optional): if supplied: special yaml file for the house data. Defaults to None.
+            index (str, optional): if supplied: loads the yaml data from the file at this index. Defaults to "default".
+        """
         self.houses.append(house.House(yaml_path=yaml_path, index=index))
     
     def calculate_investment_costs(self):
@@ -22,6 +28,14 @@ class electricalGrid:
             inv_costs += house.calculate_investment_costs()
         
         return inv_costs
+    
+    def simulate_houses(self):
+        """simply simulate every house (sequentially -> we do not go over the API limit)
+        """
+        for house in self.houses:
+            house.daily_power()
+            house.simulate_daily()
+
 
 def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2020,12,31)):
     """Simulate the first case: House Owner lives in own house and prioritses the usage of the generated energy over stored energy
