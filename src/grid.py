@@ -1,6 +1,27 @@
 import hydrogenStorage
+import house
 from datetime import date
 from calendar import monthrange
+
+class electricalGrid:
+    def __init__(self):
+        self.hydrogenStorage = hydrogenStorage.hydrogenStorage()
+        self.houses = []
+        #? IDEA:
+        #? dictionary with the format:
+        #? {hour: {inputs: xxx, outputs: xxx, netto: xxx, autarky: xxx}}
+        #? can be split into np arrays for further plotting etc. easily
+        self.time = {}
+    
+    def add_house(self, yaml_path=None, index="default"):
+        self.houses.append(house.House(yaml_path=yaml_path, index=index))
+    
+    def calculate_investment_costs(self):
+        inv_costs = self.hydrogenStorage.calculate_investment_costs()
+        for house in self.houses:
+            inv_costs += house.calculate_investment_costs()
+        
+        return inv_costs
 
 def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2020,12,31)):
     """Simulate the first case: House Owner lives in own house and prioritses the usage of the generated energy over stored energy
