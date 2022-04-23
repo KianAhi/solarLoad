@@ -38,11 +38,11 @@ class House:
         self.houseName = None
         ######
         self.accumulatorStorage = 0 #kwH
-        self.gridUsageCosts = 0
+        self.gridUsageCosts = []
         self.accumulatorCap = 2 #kWh
 
     def gridUsage(self, energyDiff):
-        """calculate the grid usage from the energyDifference
+        """calculate the costs for the leftover energy the customer has to retrieve from the public energy provider
 
         Args:
             energyDiff (float): energyDifference in kWh
@@ -50,8 +50,8 @@ class House:
         Returns:
             float: grid usage in kWh
         """
-        self.gridUsageCosts += energyDiff * self.GRIDCOSTS # €/kWh
-        self.energyDiff 
+        self.gridUsageCosts.append(energyDiff * self.GRIDCOSTS) # €/kWh
+
 
     def plotGraph(self, size = (500,500)):
         """plotting the data from the PVGIS API
@@ -311,7 +311,7 @@ class House:
                     my_dict[year][month][day] = {}
                     for hour in hours:
                         my_dict[year][month][day][hour] = "Edeka"
-        return my_dict
+        setattr(self, 'pvNetto', my_dict)
 
 if __name__ == "__main__":
     a = House()

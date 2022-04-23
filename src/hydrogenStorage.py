@@ -6,6 +6,7 @@ class hydrogenStorage:
         self.stored_power = 0
         self.effective_output_capacity = 0
         
+    ##TODO: calculate costs for using the public grid (ca. 2ct/kwh)
     def input(self, input_power):
         self.stored_power += input_power * self.power2H_efficiency
         self.effective_output_capacity = self.stored_power * self.H2power_efficiency
