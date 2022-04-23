@@ -40,6 +40,7 @@ class House:
         self.accumulatorStorage = 0 #kwH
         self.gridUsageCosts = []
         self.accumulatorCap = 2 #kWh
+        self.daily_consumption = self.read_daily_consumption()
 
     def gridUsage(self, energyDiff):
         """calculate the costs for the leftover energy the customer has to retrieve from the public energy provider
@@ -76,6 +77,14 @@ class House:
         image = self.figure_to_image(fig)
         return self.convert_to_bytes(image, size)
 
+    def read_daily_consumption(self, file_path=None):
+        if file_path == None:
+            file_path = "../data/avg_daily_consumption.txt"
+        with open(file_path, "r") as f:
+            data = f.readlines()
+        daily_consumption = [(lambda dp: [float(dp[0]), float(dp[1])])(dp.strip().split(' ')) for dp in data]
+        return daily_consumption
+    
     def calculate_peak_power(self):
         """calculate the peak power from the roof area and the watt peak per m^2 of
         the solar cell technology. (wattpeak can be used to test different technologies)
