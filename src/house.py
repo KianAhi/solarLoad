@@ -82,6 +82,8 @@ class House:
             file_path = "../data/avg_daily_consumption.txt"
         with open(file_path, "r") as f:
             data = f.readlines()
+        #? IDEA: maybe multiply dp[1] with a random number between 0.975 - 1.025 to "simulate" different households
+        #? with different daily usages. Might only be interesting with smaller sample sizes.
         daily_consumption = [(lambda dp: [float(dp[0]), float(dp[1])])(dp.strip().split(' ')) for dp in data]
         return daily_consumption
     
