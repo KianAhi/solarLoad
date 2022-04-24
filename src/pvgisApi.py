@@ -1,4 +1,5 @@
 import requests
+import datetime
 
 class PVGIS:
     def __init__(self, version='5.2', tool_name="PVcalc"):
@@ -292,8 +293,8 @@ class PVDaily:
         month_dict = {}
         for dp in self.data['outputs']['daily_profile']:
             month = dp['month']
-            time = dp['time']
-            power = dp['G(i)'] * efficiency * peak_power / 1000.0
+            time = float(datetime.datetime.strptime(dp['time'], "%H:%S").hour)
+            power = float(dp['G(i)'] * efficiency * peak_power / 1000.0)
             if month in month_dict.keys():
                 month_dict[month].append([time, power])
             else:
