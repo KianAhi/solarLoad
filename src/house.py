@@ -42,7 +42,7 @@ class House:
         self.accumulatorCap = 2 #kWh
         self.daily_consumption = self.read_daily_consumption()
 
-    def gridUsage(self, energyDiff):
+    def gridUsage(self, hour, energyDiff):
         """calculate the costs for the leftover energy the customer has to retrieve from the public energy provider
 
         Args:
@@ -51,7 +51,7 @@ class House:
         Returns:
             float: grid usage in kWh
         """
-        self.gridUsageCosts.append(energyDiff * self.GRIDCOSTS) # €/kWh
+        self.gridUsageCosts.append([hour, energyDiff * self.GRIDCOSTS]) # €/kWh
 
 
     def plotGraph(self, size = (500,500)):
