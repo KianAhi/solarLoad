@@ -296,33 +296,7 @@ class House:
         data = piexif.dump(exif_dict)
         images.save(filepath, exif=data)
     
-    def calculateNettoEnergy(self, startDate, endDate):
-        """Calculate the netto energy of the PV system and the user required energy between two dates
 
-        Args:
-            startDate date: _description_
-            endDate date: _description_
-
-        Returns:
-            dict: the dict with netto energy calculated
-        """
-        my_dict = {}
-        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        hours = ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
-
-        years = []
-        for i in range(endDate.year - startDate.year + 1):
-            years.append(startDate.year + i)
-        for year in years:
-            my_dict[year] = {}
-            for month in months:
-                my_dict[year][month] = {}
-                _, days = monthrange(year, months.index(month)+1)
-                for day in range(1,days+1):
-                    my_dict[year][month][day] = {}
-                    for hour in hours:
-                        my_dict[year][month][day][hour] = "Edeka"
-        setattr(self, 'pvNetto', my_dict)
 
 if __name__ == "__main__":
     a = House()
