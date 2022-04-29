@@ -1,9 +1,11 @@
 import hydrogenStorage
 import house
 import datetime
+from datetime import date, timedelta
 from datetime import date
 from calendar import monthrange
 import matplotlib.pyplot as plt
+from matplotlib.dates import AutoDateFormatter, AutoDateLocator
 import numpy as np
 
 class electricalGrid:
@@ -159,6 +161,38 @@ def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2
                         
     return houses, hydrogenStorage 
 
+def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
+def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
+
+    fig, ax = plt.subplots()
+    ax.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
+    ax.plot(np.linspace(0,len(grid.energyState)-1, len(grid.energyState)), np.array(grid.energyState))
+    ax.plot(np.linspace(0,len(grid.autarky)-1, len(grid.autarky)), np.array(grid.autarky))
+    #ax.set_xticks(dateHours)
+    max_hour = (endDate - startDate).total_seconds() / 3600
+    hour = 0.0
+    inc = 1
+    ticks = [0.0]
+    labels = [startDate.strftime('%b %Y')]
+    hour = (monthrange(startDate.year, startDate.month)[1] - (startDate.day-1))*24.0
+    cur_date = startDate + datetime.timedelta(days=hour/24)
+    ticks.append(hour)
+    labels.append(cur_date.strftime('%b %Y'))
+    while hour < max_hour:
+        cur_date += datetime.timedelta(days=monthrange(cur_date.year, cur_date.month)[1])
+        hour = (cur_date - startDate).total_seconds() / 3600
+        ticks.append(hour)
+        labels.append(cur_date.strftime('%b %Y'))
+        
+    ax.set_xticks(ticks, labels,rotation=45)
+    ax.set_xlabel('Time [months]')
+    ax.set_ylabel('Energy [kWh]')
+
+    ax.legend(["H2 storage", "Energy State"])
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -168,6 +202,6 @@ if __name__ == "__main__":
     for i in range(10):
         grid.add_house()
     grid.simulate_houses()
-    grid.simulate_grid()
-    plt.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
-    plt.show()
+    grid.simulate_grid(startDate = date(2020,8,1), endDate=date(2022,8,1))
+    plots(grid, startDate = date(2020,5,30), endDate=date(2022,8,1))
+    
