@@ -1,11 +1,14 @@
 import hydrogenStorage
 import house
+import datetime
 from datetime import date
 from calendar import monthrange
+import matplotlib.pyplot as plt
+import numpy as np
 
 class electricalGrid:
     def __init__(self):
-        self.hydrogenStorage = hydrogenStorage.hydrogenStorage()
+        self.hydrogenStorage = hydrogenStorage.hydrogenStorage(energy_capacity=20000)
         self.houses = []
         #? IDEA:
         #? dictionary with the format:
@@ -35,6 +38,68 @@ class electricalGrid:
         for house in self.houses:
             house.daily_power()
             house.simulate_daily()
+    
+    def simulate_grid(self, startDate = date(2020,1,1), endDate=date(2022,1,1)):
+        days = (endDate - startDate).days
+        self.energyState = []
+        self.H2storage = []
+        self.autarky = []
+        for day in range(days):
+            # calculate month bc we need it to search in the daily data from PVGIS
+            month = (startDate + datetime.timedelta(days=day)).month
+            for hour in range(24):
+                print("It is day #%s and hour %s:00" % (day+1, hour))
+                current_hour = hour + day*len(range(24))
+                avg_autarky = 0
+                avg_nettoValue = 0
+                for house in self.houses:
+                    #1 calculate production and consumption at every hour
+                    #2 calculate the nettoValue
+                    production = house.pv_daily[month][hour][1]
+                    consumption = house.daily_consumption[hour][1]
+                    nettoValue = production - consumption
+                    avg_nettoValue += nettoValue
+                    if nettoValue > 0: # reinschieben in speicher oder 
+                        if house.accumulatorStorage < house.accumulatorCap:
+                            if house.accumulatorStorage + nettoValue > house.accumulatorCap:
+                                diff = house.accumulatorCap - house.accumulatorStorage
+                                house.accumulatorStorage = house.accumulatorCap
+                                self.hydrogenStorage.input(nettoValue - diff)
+                                avg_autarky += 1
+                            else:
+                                house.accumulatorStorage += nettoValue
+                        else:
+                            self.hydrogenStorage.input(nettoValue)
+                            avg_autarky += 1
+                    else: # alles benutzt
+                        energyDiff = abs(nettoValue)
+                        if energyDiff - house.accumulatorStorage > 0:
+                            energyDiff -= house.accumulatorStorage
+                            house.accumulatorStorage = 0
+                        else:
+                            house.accumulatorStorage -= energyDiff
+                            energyDiff = 0
+                            avg_autarky += 1
+                        if energyDiff - self.hydrogenStorage.effective_output_capacity  > 0:
+                            energyDiff -= self.hydrogenStorage.effective_output_capacity 
+                            self.hydrogenStorage.output(self.hydrogenStorage.effective_output_capacity)
+                        else:
+                            self.hydrogenStorage.output(energyDiff)
+                            energyDiff = 0
+                            avg_autarky += 1
+                        if energyDiff > 0:
+                            avg_autarky += energyDiff/abs(nettoValue)
+                            house.gridUsage(current_hour, energyDiff)
+                            energyDiff = 0
+                
+                # at the first hour (index = 0) the energyState is just the nettoValue
+                # else: successive addition of nettoValue to energyState of an hour before
+                if current_hour != 0:
+                    self.energyState.append(self.energyState[current_hour-1] + avg_nettoValue/len(self.houses))
+                else:
+                    self.energyState.append(avg_nettoValue/len(self.houses))
+                self.H2storage.append(self.hydrogenStorage.effective_output_capacity)
+                self.autarky.append(avg_autarky/len(self.houses))
 
 
 def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2020,12,31)):
@@ -97,5 +162,12 @@ def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2
 
 
 if __name__ == "__main__":
-    storage = hydrogenStorage.hydrogenStorage()
-    model1()
+    # storage = hydrogenStorage.hydrogenStorage()
+    # model1()
+    grid = electricalGrid()
+    for i in range(10):
+        grid.add_house()
+    grid.simulate_houses()
+    grid.simulate_grid()
+    plt.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
+    plt.show()

@@ -17,7 +17,8 @@ class hydrogenStorage:
         self.effective_output_capacity = self.stored_power * self.H2power_efficiency
         if self.stored_power > self.storage_capacity:
             self.stored_power = self.storage_capacity
-            raise
+            #! why is this here?
+            # raise
     
     def output(self, output_power):
         """handles the output of power from the H2 storage
@@ -31,7 +32,8 @@ class hydrogenStorage:
         else:
             self.stored_power = 0
             self.effective_output_capacity = 0
-            raise
+            #! why is this here?
+            # raise
     
     #TODO find data for investment costs of H2 storage
     def calculate_investment_costs(self):
