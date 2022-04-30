@@ -27,7 +27,9 @@ class electricalGrid:
         """
         self.houses.append(house.House(yaml_path=yaml_path, index=index))
     
+
     def calculate_investment_costs(self):
+        ##TODO: Can we do the costs in a list for every month? Then we would see whenever we add a house after x months how the costs go up
         inv_costs = self.hydrogenStorage.calculate_investment_costs()
         for house in self.houses:
             inv_costs += house.calculate_investment_costs()
@@ -61,6 +63,9 @@ class electricalGrid:
                     consumption = house.daily_consumption[hour][1]
                     nettoValue = production - consumption
                     avg_nettoValue += nettoValue
+                    ##TODO: call house.energyUsedFromPV every hour at the end of the loop. The amount of energy used from the PV and 
+                    ##  the energy from the battery*efficiency needs to be added to this
+                    ## furthermore the amount of energy from the hydrogen storage needs to be calculated
                     if nettoValue > 0: # reinschieben in speicher oder 
                         if house.accumulatorStorage < house.accumulatorCap:
                             if house.accumulatorStorage + nettoValue > house.accumulatorCap:
@@ -104,15 +109,9 @@ class electricalGrid:
                 self.autarky.append(avg_autarky/len(self.houses))
 
 
-def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
-    fig, ax = plt.subplots()
-    ax.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
-    ax.plot(np.linspace(0,len(grid.energyState)-1, len(grid.energyState)), np.array(grid.energyState))
-    ax.plot(np.linspace(0,len(grid.autarky)-1, len(grid.autarky)), np.array(grid.autarky))
-    #ax.set_xticks(dateHours)
+def getyLabelSpaced(startDate, endDate):
     max_hour = (endDate - startDate).total_seconds() / 3600
     hour = 0.0
-    inc = 1
     ticks = [0.0]
     labels = [startDate.strftime('%b %Y')]
     hour = (monthrange(startDate.year, startDate.month)[1] - (startDate.day-1))*24.0
@@ -124,12 +123,47 @@ def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
         hour = (cur_date - startDate).total_seconds() / 3600
         ticks.append(hour)
         labels.append(cur_date.strftime('%b %Y'))
-        
-    ax.set_xticks(ticks, labels,rotation=45)
-    ax.set_xlabel('Time [months]')
-    ax.set_ylabel('Energy [kWh]')
 
-    ax.legend(["H2 storage", "Energy State"])
+def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
+    """TODO
+    Subplot1: h2Storage over time
+    Subplot1: energyState over time
+    Subplot1: bought energy from provider over time
+    Subplot2: autarky over time
+    Subplot3: cost, revenue, profit over time
+    """
+
+    ticks, labels = getyLabelSpaced(startDate,endDate)   
+
+    fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex=True)
+
+    
+
+    ax1.set_title="H2 storage, energyState over time"
+    ax1.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
+    ax1.plot(np.linspace(0,len(grid.energyState)-1, len(grid.energyState)), np.array(grid.energyState))
+    ax1.set_ylabel('Energy [kWh]')
+    #ax1.set_xlabel('Time [months]')
+    ax1.legend(["H2 storage", "Energy State"])
+
+    ax2.set_title="Autarky over time"
+    ax2.plot(np.linspace(0,len(grid.autarky)-1, len(grid.autarky)), np.array(grid.autarky))
+    #ax2.set_xlabel('Time [months]')
+    ax2.legend(["Autarky"])
+
+    ax3.set_title="Cost, revenue, profit over time"
+    #ax3.set_xlabel('Time [months]')
+    ax3.legend(["Cost", "Revenue", "Profit"])
+    ax3.plot(np.linspace(0,len(grid.cost)-1, len(grid.cost)), np.array(grid.cost))
+
+ 
+
+
+
+    #ax1.set_xticks(ticks, labels,rotation=45)
+    
+
+    
     plt.show()
 
 
