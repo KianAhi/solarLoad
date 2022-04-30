@@ -105,7 +105,6 @@ class electricalGrid:
 
 
 def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
-
     fig, ax = plt.subplots()
     ax.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
     ax.plot(np.linspace(0,len(grid.energyState)-1, len(grid.energyState)), np.array(grid.energyState))
