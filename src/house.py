@@ -57,7 +57,7 @@ class House:
     def energyUsedFromPV(self, hour, savedEnergy):
 
         self.usedEnergy.append([hour, savedEnergy])
-)
+
 
     def plotGraph(self, size = (500,500)):
         """plotting the data from the PVGIS API
