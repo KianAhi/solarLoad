@@ -4,6 +4,7 @@ import datetime
 from datetime import date, timedelta
 from datetime import date
 from calendar import monthrange
+from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator
 import numpy as np
@@ -184,13 +185,13 @@ class electricalGrid:
         """
         
         for h in self.houses:
-            print(h.calculate_investment_costs())
+            h.calculate_investment_costs()
+            h.calculate_running_costs()
         
         revenue, labels = self.calculate_revenue(startDate,endDate)
 
-        ticks, labels = self.getyLabelSpaced(startDate,endDate)   
-
-        fig, (ax1, ax2, ax3) = plt.subplots(3,1)
+        ticks, labels = self.getyLabelSpaced(startDate,endDate)
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4,1)
         
 
         ax1.set_title="H2 storage, energyState over time"
@@ -198,30 +199,66 @@ class electricalGrid:
         ax1.plot(np.linspace(0,len(self.energyState)-1, len(self.energyState)), np.array(self.energyState))
         ax1.set_ylabel('Energy [kWh]')
         #ax1.set_xlabel('Time [months]')
-        ax1.set_xticks(ticks, labels)
+        # ax1.set_xticks(ticks)
+        # ax1.set_xlabel([])
         ax1.legend(["H2 storage", "Energy State"])
 
         ax2.set_title="Autarky over time"
         ax2.plot(np.linspace(0,len(self.autarky)-1, len(self.autarky)), np.array(self.autarky))
         ax2.sharex = ax1
-        ax2.set_xticks(ticks, labels)
+        # ax2.set_xticks(ticks)
+        # ax2.set_xlabel([])
         #ax2.set_xlabel('Time [months]')
         ax2.legend(["Autarky"])
 
-        #ax3.set_title="Cost, revenue, profit over time"
-        #ax3.set_xlabel('Time [months]')
-        #ax3.legend(["Cost", "Revenue", "Profit"])
-        #ax3.plot(np.linspace(0,len(self.cost)-1, len(self.cost)), np.array(self.cost))
+        rel_date = relativedelta(endDate, startDate)
+        rel_months = rel_date.months + rel_date.years * 12
+        costs = np.array([0.0]*(rel_months+1))
+        revenues_total = []
+        for r_index in range(len(revenue)):
+            rev_netto = 0.0
+            for r in range(r_index+1):
+                rev_netto += sum(revenue[r])
+            revenues_total.append(rev_netto)
+        
+        for h in self.houses:
+            costs_house = [h.investment_costs] + [h.investment_costs + (h.running_costs / 12) * (month+1) for month in range(rel_months)]
+            costs += np.array(costs_house)
+
+        for m in range(len(costs)):
+            if costs[m] < revenues_total[m]:
+                print('#'*10)
+                print("Break-Even after %s months!!!" % m )
+                print('#'*10)
+                
+                break
+        
+        ax3.plot(np.linspace(0,len(costs)-1, len(costs)), np.array(costs))
+        ax3.plot(np.linspace(0,len(revenues_total)-1, len(revenues_total)), np.array(revenues_total))
 
         solar = [item[0] for item in revenue]
         hydro = [item[1] for item in revenue]
         accumulator = [item[2] for item in revenue]
-        ax3.bar(labels, solar, width=0.5, color='b', label="Solar")
-        ax3.bar(labels, hydro, width=0.5, color='g',bottom=solar, label="Hydro")
-        ax3.bar(labels, accumulator, width=0.5, color='r', bottom = hydro, label = "Accumulator")
-        ax3.set_ylabel('Revenue [€]')
-        #ax3.sharex = ax1
-        ax3.legend()
+        
+        # print('#'*10)
+        # print(len(solar))
+        # print(len(hydro))
+        # print(len(accumulator))
+        # print(len(ticks))
+        # print('#'*10)
+        
+        #ax4.set_title="Cost, revenue, profit over time"
+        #ax4.set_xlabel('Time [months]')
+        #ax4.legend(["Cost", "Revenue", "Profit"])
+        #ax4.plot(np.linspace(0,len(self.cost)-1, len(self.cost)), np.array(self.cost))
+        ax4.bar(labels, solar, width=0.5, color='b', label="Solar")
+        ax4.bar(labels, hydro, width=0.5, color='g',bottom=solar, label="Hydro")
+        ax4.bar(labels, accumulator, width=0.5, color='r', bottom = hydro, label = "Accumulator")
+        ax4.set_ylabel('Revenue [€]')
+        # ax4.set_xticks(ticks, labels)
+        #ax4.sharex = ax1
+        ax4.legend()
+        
         plt.xticks(rotation=45, ha='right')
         plt.show()
 
@@ -230,7 +267,7 @@ if __name__ == "__main__":
     # storage = hydrogenStorage.hydrogenStorage()
     # model1()
     startDate = date(2020,8,1)
-    endDate = date(2022,8,1)
+    endDate = date(2040,8,1)
     grid = electricalGrid()
     for i in range(10):
         grid.add_house()
