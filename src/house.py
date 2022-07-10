@@ -43,7 +43,7 @@ class House:
         self.usedEnergy = {} #kWh
         self.daily_consumption = self.read_daily_consumption()
 
-    def energyUsage(self, hour, energy, date, type):
+    def energyUsage(self, hour, energy, date, energy_type):
         """Write the energy usage and composition for every date and every hour in a dict with the corresponding prices
 
         Args:
