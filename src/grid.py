@@ -7,6 +7,7 @@ from calendar import monthrange
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator
 import numpy as np
+import random
 
 class electricalGrid:
     def __init__(self):
@@ -34,6 +35,50 @@ class electricalGrid:
         
         return inv_costs
     
+<<<<<<< Updated upstream
+=======
+    def calculate_revenue(self, startDate, endDate):
+
+        for house in self.houses:
+            house.calculate_monthly_revenue()
+
+        labels = []
+        revenue = []
+        for month in self.months_between(startDate, endDate):
+            month = month.strftime("%Y-%m")
+            labels.append(month)
+            solarRevenue = 0
+            hydroRevenue = 0
+            batteryRevenue = 0
+            for house in self.houses:
+                try:
+                    solarRevenue += house.monthlyRevenue[month]["solar"]
+                    hydroRevenue += house.monthlyRevenue[month]["hydro"]
+                    batteryRevenue += house.monthlyRevenue[month]["accumulator"] 
+                except KeyError:
+                    pass
+            revenue.append([solarRevenue, hydroRevenue, batteryRevenue])
+        return revenue, labels
+
+
+    def months_between(self, start_date, end_date):
+
+        if start_date > end_date:
+            raise ValueError(f"Start date {start_date} is not before end date {end_date}")
+
+        year = start_date.year
+        month = start_date.month
+
+        while (year, month) <= (end_date.year, end_date.month):
+            yield datetime.date(year, month, 1)
+            if month == 12:
+                month = 1
+                year += 1
+            else:
+                month += 1  
+
+
+>>>>>>> Stashed changes
     def simulate_houses(self):
         """simply simulate every house (sequentially -> we do not go over the API limit)
         """
@@ -55,45 +100,76 @@ class electricalGrid:
                 avg_autarky = 0
                 avg_nettoValue = 0
                 for house in self.houses:
+                    house_autarky = 0
                     #1 calculate production and consumption at every hour
                     #2 calculate the nettoValue
-                    production = house.pv_daily[month][hour][1]
-                    consumption = house.daily_consumption[hour][1]
+                    production = random.uniform(0.975, 1.025) * house.pv_daily[month][hour][1]
+                    consumption = random.uniform(0.975, 1.025)* house.daily_consumption[hour][1]
                     nettoValue = production - consumption
                     avg_nettoValue += nettoValue
                     if nettoValue > 0: # reinschieben in speicher oder 
+<<<<<<< Updated upstream
+=======
+                        house.energyUsage(hour, consumption, todaysDate, energy_type = "solar")
+>>>>>>> Stashed changes
                         if house.accumulatorStorage < house.accumulatorCap:
                             if house.accumulatorStorage + nettoValue > house.accumulatorCap:
                                 diff = house.accumulatorCap - house.accumulatorStorage
                                 house.accumulatorStorage = house.accumulatorCap
                                 self.hydrogenStorage.input(nettoValue - diff)
-                                avg_autarky += 1
+                                house_autarky = 1
                             else:
                                 house.accumulatorStorage += nettoValue
+                                house_autarky = 1
                         else:
                             self.hydrogenStorage.input(nettoValue)
-                            avg_autarky += 1
+                            house_autarky = 1
                     else: # alles benutzt
+<<<<<<< Updated upstream
                         energyDiff = abs(nettoValue)
                         if energyDiff - house.accumulatorStorage > 0:
                             energyDiff -= house.accumulatorStorage
                             house.accumulatorStorage = 0
                         else:
                             house.accumulatorStorage -= energyDiff
+=======
+                        house.energyUsage(hour, production, todaysDate, energy_type = "solar")
+                        energyDiff = abs(nettoValue)
+                        if energyDiff - house.accumulatorStorage > 0:
+                            energyDiff -= house.accumulatorStorage
+                            house.energyUsage(hour, house.accumulatorStorage, todaysDate, energy_type = "accumulator")
+                            house.accumulatorStorage = 0
+                        else:
+                            house.accumulatorStorage -= energyDiff
+                            house.energyUsage(hour, energyDiff, todaysDate, energy_type = "accumulator")
+>>>>>>> Stashed changes
                             energyDiff = 0
-                            avg_autarky += 1
+                            house_autarky = 1
                         if energyDiff - self.hydrogenStorage.effective_output_capacity  > 0:
                             energyDiff -= self.hydrogenStorage.effective_output_capacity 
+<<<<<<< Updated upstream
                             self.hydrogenStorage.output(self.hydrogenStorage.effective_output_capacity)
                         else:
                             self.hydrogenStorage.output(energyDiff)
+=======
+                            house.energyUsage(hour, self.hydrogenStorage.effective_output_capacity, todaysDate, energy_type = "hydro")
+                            self.hydrogenStorage.output(self.hydrogenStorage.effective_output_capacity)
+                        else:
+                            self.hydrogenStorage.output(energyDiff)
+                            house.energyUsage(hour, energyDiff, todaysDate, energy_type = "hydro")
+>>>>>>> Stashed changes
                             energyDiff = 0
-                            avg_autarky += 1
+                            house_autarky = 1
                         if energyDiff > 0:
+<<<<<<< Updated upstream
                             avg_autarky += energyDiff/abs(nettoValue)
                             house.gridUsage(current_hour, energyDiff)
+=======
+                            house_autarky = energyDiff/abs(nettoValue)
+                            house.energyUsage(hour, energyDiff, todaysDate, energy_type = "grid")
+>>>>>>> Stashed changes
                             energyDiff = 0
-                
+                    avg_autarky += house_autarky
                 # at the first hour (index = 0) the energyState is just the nettoValue
                 # else: successive addition of nettoValue to energyState of an hour before
                 if current_hour != 0:
@@ -191,8 +267,42 @@ def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
     ax.set_xlabel('Time [months]')
     ax.set_ylabel('Energy [kWh]')
 
+<<<<<<< Updated upstream
     ax.legend(["H2 storage", "Energy State"])
     plt.show()
+=======
+        ax1.set_title="H2 storage, energyState over time"
+        ax1.plot(np.linspace(0,len(self.H2storage)-1, len(self.H2storage)), np.array(self.H2storage))
+        ax1.plot(np.linspace(0,len(self.energyState)-1, len(self.energyState)), np.array(self.energyState))
+        ax1.set_ylabel('Energy [kWh]')
+        #ax1.set_xlabel('Time [months]')
+        ax1.set_xticks(ticks, labels)
+        ax1.legend(["H2 storage", "Energy State"])
+
+        ax2.set_title="Autarky over time"
+        ax2.plot(np.linspace(0,len(self.autarky)-1, len(self.autarky)), np.array(self.autarky))
+        ax2.sharex = ax1
+        ax2.set_xticks(ticks, labels)
+        #ax2.set_xlabel('Time [months]')
+        ax2.legend(["Autarky"])
+
+        #ax3.set_title="Cost, revenue, profit over time"
+        #ax3.set_xlabel('Time [months]')
+        #ax3.legend(["Cost", "Revenue", "Profit"])
+        #ax3.plot(np.linspace(0,len(self.cost)-1, len(self.cost)), np.array(self.cost))
+
+        solar = [item[0] for item in revenue]
+        hydro = [item[1] for item in revenue]
+        accumulator = [item[2] for item in revenue]
+        ax3.bar(labels, solar, width=0.5, color='b', label="Solar")
+        ax3.bar(labels, hydro, width=0.5, color='g',bottom=solar, label="Hydro")
+        ax3.bar(labels, accumulator, width=0.5, color='r', bottom = hydro, label = "Accumulator")
+        ax3.set_ylabel('Revenue [€]')
+        #ax3.sharex = ax1
+        ax3.legend()
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+>>>>>>> Stashed changes
 
 
 if __name__ == "__main__":

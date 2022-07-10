@@ -42,11 +42,52 @@ class House:
         self.accumulatorCap = 2 #kWh
         self.daily_consumption = self.read_daily_consumption()
 
+<<<<<<< Updated upstream
     def gridUsage(self, hour, energyDiff):
         """calculate the costs for the leftover energy the customer has to retrieve from the public energy provider
 
         Args:
             energyDiff (float): energyDifference in kWh
+=======
+    def energyUsage(self, hour, energy, date, energy_type):
+        """Write the energy usage and composition for every date and every hour in a dict with the corresponding prices
+
+        Args:
+            hour (int): hour of the day
+            energy (float): energyerence in kWh
+            date (date): datetime object in format YYYY-MM-DD
+            energy_type (str): energy_type of energy (e.g. 'grid', 'accumulator', 'solar', 'hydro')
+        """
+        date = date.strftime("%Y-%m-%d")
+        if energy_type == "grid":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.GRID_USAGE_COSTS}
+        elif energy_type == "hydro":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.HYDRO_USAGE_COSTS}
+        elif energy_type == "solar":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.PV_USAGE_COSTS}
+        elif energy_type == "accumulator":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.ACCUMULATOR_USAGE_COSTS}
+
+        if date in self.usedEnergy.keys():
+            if hour in self.usedEnergy[date].keys():
+                self.usedEnergy[date][hour].append(d)
+            else:
+                self.usedEnergy[date][hour] = [d]
+        else:
+            self.usedEnergy[date] = {hour: [d]}
+    
+    def calculate_monthly_revenue(self):
+        daily_solar = 0
+        daily_grid = 0
+        daily_hydro = 0
+        daily_accumulator = 0
+        oldMonth = None
+        d = {}
+        for date in self.usedEnergy:
+            currentYear, currentMonth, _ = date.split('-')
+
+            if currentMonth != oldMonth: ##BUG: somehow this starts at one month ahead
+>>>>>>> Stashed changes
 
         Returns:
             float: grid usage in kWh
@@ -57,6 +98,12 @@ class House:
     def plotGraph(self, size = (500,500)):
         """plotting the data from the PVGIS API
         """
+        
+        if not hasattr(self, 'investment_costs'):
+            self.calculate_investment_costs()
+        if not hasattr(self, 'running_costs'):
+            self.calculate_running_costs()
+        
         years = np.linspace(0,20,21)
         costs = self.investment_costs + self.running_costs * years
         
@@ -108,15 +155,15 @@ class House:
     
     def simulate_daily(self):
         print("creating meta-pv object...")
-        meta_pv = self.create_pv()
+        self.meta_pv = self.create_pv()
         print("sending API request for meta-pv...")
-        meta_pv.send_api_request()
+        self.meta_pv.send_api_request()
         print("creating daily-pv object...")
         pv_system = self.daily_power()
         print("sending API request for daily-pv...")
         returnCheck = pv_system.send_api_request()
         if returnCheck == 0:
-            self.pv_daily = pv_system.get_data(meta_pv.get_loss(), self.calculate_peak_power())
+            self.pv_daily = pv_system.get_data(self.meta_pv.get_loss(), self.calculate_peak_power())
             return 0
         else:
             return returnCheck
@@ -198,6 +245,9 @@ class House:
         Returns:
             float: running costs per year
         """
+        print(self.get_data_for_house('E_y'))
+        print(self.ENERGYPRICE_TO_GRID)
+        print(self.SHARE)
         run_cost = (self.get_data_for_house('E_y') * self.ENERGYPRICE_TO_GRID) * (self.SHARE/100)
         run_cost += self.INSURANCECOSTS
         setattr(self, 'running_costs', run_cost)
@@ -328,3 +378,4 @@ if __name__ == "__main__":
     a = House()
     a.daily_power()
     a.simulate_daily()
+    a.plotGraph()
