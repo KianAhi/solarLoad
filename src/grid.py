@@ -28,15 +28,15 @@ class electricalGrid:
         """
         self.houses.append(house.House(yaml_path=yaml_path, index=index))
     
+
     def calculate_investment_costs(self):
+        ##TODO: Can we do the costs in a list for every month? Then we would see whenever we add a house after x months how the costs go up
         inv_costs = self.hydrogenStorage.calculate_investment_costs()
         for house in self.houses:
             inv_costs += house.calculate_investment_costs()
         
         return inv_costs
     
-<<<<<<< Updated upstream
-=======
     def calculate_revenue(self, startDate, endDate):
 
         for house in self.houses:
@@ -78,7 +78,6 @@ class electricalGrid:
                 month += 1  
 
 
->>>>>>> Stashed changes
     def simulate_houses(self):
         """simply simulate every house (sequentially -> we do not go over the API limit)
         """
@@ -93,9 +92,11 @@ class electricalGrid:
         self.autarky = []
         for day in range(days):
             # calculate month bc we need it to search in the daily data from PVGIS
-            month = (startDate + datetime.timedelta(days=day)).month
+            todaysDate = startDate + timedelta(days=day)
+            month = todaysDate.month #! Added this so we can use todays date further down for tracking purposes
+            #month = (startDate + datetime.timedelta(days=day)).month
             for hour in range(24):
-                print("It is day #%s and hour %s:00" % (day+1, hour))
+                #print("It is day #%s and hour %s:00" % (day+1, hour))
                 current_hour = hour + day*len(range(24))
                 avg_autarky = 0
                 avg_nettoValue = 0
@@ -107,11 +108,9 @@ class electricalGrid:
                     consumption = random.uniform(0.975, 1.025)* house.daily_consumption[hour][1]
                     nettoValue = production - consumption
                     avg_nettoValue += nettoValue
+
                     if nettoValue > 0: # reinschieben in speicher oder 
-<<<<<<< Updated upstream
-=======
                         house.energyUsage(hour, consumption, todaysDate, energy_type = "solar")
->>>>>>> Stashed changes
                         if house.accumulatorStorage < house.accumulatorCap:
                             if house.accumulatorStorage + nettoValue > house.accumulatorCap:
                                 diff = house.accumulatorCap - house.accumulatorStorage
@@ -125,14 +124,6 @@ class electricalGrid:
                             self.hydrogenStorage.input(nettoValue)
                             house_autarky = 1
                     else: # alles benutzt
-<<<<<<< Updated upstream
-                        energyDiff = abs(nettoValue)
-                        if energyDiff - house.accumulatorStorage > 0:
-                            energyDiff -= house.accumulatorStorage
-                            house.accumulatorStorage = 0
-                        else:
-                            house.accumulatorStorage -= energyDiff
-=======
                         house.energyUsage(hour, production, todaysDate, energy_type = "solar")
                         energyDiff = abs(nettoValue)
                         if energyDiff - house.accumulatorStorage > 0:
@@ -142,32 +133,20 @@ class electricalGrid:
                         else:
                             house.accumulatorStorage -= energyDiff
                             house.energyUsage(hour, energyDiff, todaysDate, energy_type = "accumulator")
->>>>>>> Stashed changes
                             energyDiff = 0
                             house_autarky = 1
                         if energyDiff - self.hydrogenStorage.effective_output_capacity  > 0:
                             energyDiff -= self.hydrogenStorage.effective_output_capacity 
-<<<<<<< Updated upstream
-                            self.hydrogenStorage.output(self.hydrogenStorage.effective_output_capacity)
-                        else:
-                            self.hydrogenStorage.output(energyDiff)
-=======
                             house.energyUsage(hour, self.hydrogenStorage.effective_output_capacity, todaysDate, energy_type = "hydro")
                             self.hydrogenStorage.output(self.hydrogenStorage.effective_output_capacity)
                         else:
                             self.hydrogenStorage.output(energyDiff)
                             house.energyUsage(hour, energyDiff, todaysDate, energy_type = "hydro")
->>>>>>> Stashed changes
                             energyDiff = 0
                             house_autarky = 1
                         if energyDiff > 0:
-<<<<<<< Updated upstream
-                            avg_autarky += energyDiff/abs(nettoValue)
-                            house.gridUsage(current_hour, energyDiff)
-=======
                             house_autarky = energyDiff/abs(nettoValue)
                             house.energyUsage(hour, energyDiff, todaysDate, energy_type = "grid")
->>>>>>> Stashed changes
                             energyDiff = 0
                     avg_autarky += house_autarky
                 # at the first hour (index = 0) the energyState is just the nettoValue
@@ -180,97 +159,40 @@ class electricalGrid:
                 self.autarky.append(avg_autarky/len(self.houses))
 
 
-def model1(houses, hydrogenStorage, startDate = date(2020,1,1), endDate = date(2020,12,31)):
-    """Simulate the first case: House Owner lives in own house and prioritses the usage of the generated energy over stored energy
-
-    Args:
-        houses (list): list that holds all the instances of the house class
-        hydrogenStorage (obj): Hydrogen storage object, holds the amount of stored hydrogen
-        startDate (datetime.date, optional): Starting date for the simulated time-frame Defaults to date(2020,1,1).
-        endDate (datetime.date, optional): Ending date for the simulated time-frame Defaults to date(2020,12,31).
-
-    Returns:
-        houses, hydrogenStorage
-    """
-    accumulatorStorage = 0
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    hours = ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
-    years = []
-    for i in range(endDate.year - startDate.year + 1):
-        years.append(startDate.year + i)
-        
-    pv_dict = {}
-    for year in years:
-        for month in months:
-            _, days = monthrange(year, months.index(month)+1)
-            for day in range(1,days+1):
-                for hour in hours:
-                    for house in houses:
-                        nettoValue = house.pvNetto[year][month][day][hour]
-                        if nettoValue > 0: # reinschieben in speicher oder 
-                            if house.accumulatorStorage < house.accumulatorCap:
-                                if house.accumulatorStorage + nettoValue > house.accumulatorCap:
-                                    diff = house.accumulatorCap - house.accumulatorStorage
-                                    house.accumulatorStorage = house.accumulatorCap
-                                    hydrogenStorage.input(nettoValue - diff)
-                                else:
-                                    house.accumulatorStorage += nettoValue
-                            else:
-                                hydrogenStorage.input(nettoValue)
-                        else: # alles benutzt
-                            energyDiff = abs(nettoValue)
-                            if energyDiff - house.accumulatorStorage > 0:
-                                energyDiff -= house.accumulatorStorage
-                                house.accumulatorStorage = 0
-                            else:
-                                house.accumulatorStorage -= energyDiff
-                                energyDiff = 0
-                            if energyDiff - hydrogenStorage.effective_output_capacity  > 0:
-                                energyDiff -= hydrogenStorage.effective_output_capacity 
-                                hydrogenStorage.output(hydrogenStorage.effective_output_capacity)
-                            else:
-                                hydrogenStorage.output(energyDiff)
-                                energyDiff = 0
-                            if energyDiff > 0:
-                                house.gridUsage(energyDiff)
-                                energyDiff = 0
-                        
-    return houses, hydrogenStorage 
-
-def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + timedelta(n)
-
-def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
-
-    fig, ax = plt.subplots()
-    ax.plot(np.linspace(0,len(grid.H2storage)-1, len(grid.H2storage)), np.array(grid.H2storage))
-    ax.plot(np.linspace(0,len(grid.energyState)-1, len(grid.energyState)), np.array(grid.energyState))
-    ax.plot(np.linspace(0,len(grid.autarky)-1, len(grid.autarky)), np.array(grid.autarky))
-    #ax.set_xticks(dateHours)
-    max_hour = (endDate - startDate).total_seconds() / 3600
-    hour = 0.0
-    inc = 1
-    ticks = [0.0]
-    labels = [startDate.strftime('%b %Y')]
-    hour = (monthrange(startDate.year, startDate.month)[1] - (startDate.day-1))*24.0
-    cur_date = startDate + datetime.timedelta(days=hour/24)
-    ticks.append(hour)
-    labels.append(cur_date.strftime('%b %Y'))
-    while hour < max_hour:
-        cur_date += datetime.timedelta(days=monthrange(cur_date.year, cur_date.month)[1])
-        hour = (cur_date - startDate).total_seconds() / 3600
+    def getyLabelSpaced(self,startDate, endDate):
+        max_hour = (endDate - startDate).total_seconds() / 3600
+        hour = 0.0
+        ticks = [0.0]
+        labels = [startDate.strftime('%b %Y')]
+        hour = (monthrange(startDate.year, startDate.month)[1] - (startDate.day-1))*24.0
+        cur_date = startDate + datetime.timedelta(days=hour/24)
         ticks.append(hour)
         labels.append(cur_date.strftime('%b %Y'))
+        while hour < max_hour:
+            cur_date += datetime.timedelta(days=monthrange(cur_date.year, cur_date.month)[1])
+            hour = (cur_date - startDate).total_seconds() / 3600
+            ticks.append(hour)
+            labels.append(cur_date.strftime('%b %Y'))
+        return ticks, labels
+    def plots(self, startDate = date(2020,8,1), endDate = date(2022,8,1)):
+        """TODO
+        Subplot1: h2Storage over time
+        Subplot1: energyState over time
+        Subplot1: bought energy from provider over time
+        Subplot2: autarky over time
+        Subplot3: cost, revenue, profit over time
+        """
         
-    ax.set_xticks(ticks, labels,rotation=45)
-    ax.set_xlabel('Time [months]')
-    ax.set_ylabel('Energy [kWh]')
+        for h in self.houses:
+            print(h.calculate_investment_costs())
+        
+        revenue, labels = self.calculate_revenue(startDate,endDate)
 
-<<<<<<< Updated upstream
-    ax.legend(["H2 storage", "Energy State"])
-    plt.show()
-=======
+        ticks, labels = self.getyLabelSpaced(startDate,endDate)   
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3,1)
+        
+
         ax1.set_title="H2 storage, energyState over time"
         ax1.plot(np.linspace(0,len(self.H2storage)-1, len(self.H2storage)), np.array(self.H2storage))
         ax1.plot(np.linspace(0,len(self.energyState)-1, len(self.energyState)), np.array(self.energyState))
@@ -302,16 +224,17 @@ def plots(grid, startDate = date(2020,8,1), endDate = date(2022,8,1)):
         ax3.legend()
         plt.xticks(rotation=45, ha='right')
         plt.show()
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
     # storage = hydrogenStorage.hydrogenStorage()
     # model1()
+    startDate = date(2020,8,1)
+    endDate = date(2022,8,1)
     grid = electricalGrid()
     for i in range(10):
         grid.add_house()
     grid.simulate_houses()
-    grid.simulate_grid(startDate = date(2020,8,1), endDate=date(2022,8,1))
-    plots(grid, startDate = date(2020,5,30), endDate=date(2022,8,1))
+    grid.simulate_grid(startDate = startDate, endDate=endDate)
+    grid.plots(startDate = startDate, endDate=endDate)
     
