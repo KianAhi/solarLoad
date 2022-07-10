@@ -110,6 +110,10 @@ class House:
             self.calculate_investment_costs()
         if not hasattr(self, 'running_costs'):
             self.calculate_running_costs()
+        if not hasattr(self, 'revenue'):
+            self.calculate_revenue()
+        if not hasattr(self, 'profit'):
+            self.calculate_profit()
         
         years = np.linspace(0,20,21)
         costs = self.investment_costs + self.running_costs * years
@@ -128,6 +132,7 @@ class House:
         plt.plot(years,profit_list,label = "Profit")
         plt.legend()
         fig = plt.gcf()
+        plt.show()
         image = self.figure_to_image(fig)
         return self.convert_to_bytes(image, size)
 
@@ -252,10 +257,7 @@ class House:
         Returns:
             float: running costs per year
         """
-        print(self.get_data_for_house('E_y'))
-        print(self.ENERGYPRICE_TO_GRID)
-        print(self.SHARE)
-        run_cost = (self.get_data_for_house('E_y') * self.ENERGYPRICE_TO_GRID) * (self.SHARE/100)
+        run_cost = (self.meta_pv.get_data()['E_y'][0] * self.ENERGYPRICE_TO_GRID) * (self.SHARE/100)
         run_cost += self.INSURANCECOSTS
         setattr(self, 'running_costs', run_cost)
         return run_cost
@@ -266,8 +268,8 @@ class House:
         Returns:
             float: revenue
         """
-        revenue = (self.get_data_for_house('E_y') * self.ENERGYPRICE_TO_GRID)
-        print(self.get_data_for_house('E_y'))
+        revenue = (self.meta_pv.get_data()['E_y'][0] * self.ENERGYPRICE_TO_GRID)
+        print(self.meta_pv.get_data()['E_y'][0])
         print(self.ENERGYPRICE_TO_GRID)
         setattr(self, 'revenue', revenue)
         return revenue
