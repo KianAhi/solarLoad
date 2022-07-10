@@ -40,6 +40,7 @@ class House:
         self.accumulatorStorage = 0 #kwH
         self.gridUsageCosts = []
         self.accumulatorCap = 2 #kWh
+        self.usedEnergy = {} #kWh
         self.daily_consumption = self.read_daily_consumption()
 
     def energyUsage(self, hour, energy, date, type):
