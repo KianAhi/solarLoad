@@ -42,31 +42,24 @@ class House:
         self.accumulatorCap = 2 #kWh
         self.daily_consumption = self.read_daily_consumption()
 
-<<<<<<< Updated upstream
-    def gridUsage(self, hour, energyDiff):
-        """calculate the costs for the leftover energy the customer has to retrieve from the public energy provider
-
-        Args:
-            energyDiff (float): energyDifference in kWh
-=======
-    def energyUsage(self, hour, energy, date, energy_type):
+    def energyUsage(self, hour, energy, date, type):
         """Write the energy usage and composition for every date and every hour in a dict with the corresponding prices
 
         Args:
             hour (int): hour of the day
             energy (float): energyerence in kWh
             date (date): datetime object in format YYYY-MM-DD
-            energy_type (str): energy_type of energy (e.g. 'grid', 'accumulator', 'solar', 'hydro')
+            type (str): type of energy (e.g. 'grid', 'accumulator', 'solar', 'hydro')
         """
         date = date.strftime("%Y-%m-%d")
-        if energy_type == "grid":
-            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.GRID_USAGE_COSTS}
-        elif energy_type == "hydro":
-            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.HYDRO_USAGE_COSTS}
-        elif energy_type == "solar":
-            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.PV_USAGE_COSTS}
-        elif energy_type == "accumulator":
-            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.ACCUMULATOR_USAGE_COSTS}
+        if type == "grid":
+            d = {"energy": energy, "type": type, "costs_per_kWh": self.GRID_USAGE_COSTS}
+        elif type == "hydro":
+            d = {"energy": energy, "type": type, "costs_per_kWh": self.HYDRO_USAGE_COSTS}
+        elif type == "solar":
+            d = {"energy": energy, "type": type, "costs_per_kWh": self.PV_USAGE_COSTS}
+        elif type == "accumulator":
+            d = {"energy": energy, "type": type, "costs_per_kWh": self.ACCUMULATOR_USAGE_COSTS}
 
         if date in self.usedEnergy.keys():
             if hour in self.usedEnergy[date].keys():
@@ -87,14 +80,27 @@ class House:
             currentYear, currentMonth, _ = date.split('-')
 
             if currentMonth != oldMonth: ##BUG: somehow this starts at one month ahead
->>>>>>> Stashed changes
 
-        Returns:
-            float: grid usage in kWh
-        """
-        self.gridUsageCosts.append([hour, energyDiff * self.GRIDCOSTS]) # €/kWh
+                d[str(currentYear + "-" + currentMonth)] = {"solar": daily_solar, "grid": daily_grid, "hydro": daily_hydro, "accumulator": daily_accumulator}
+                daily_solar = 0
+                daily_grid = 0
+                daily_hydro = 0
+                daily_accumulator = 0
 
-
+            for hour in self.usedEnergy[date]:
+                for energy in self.usedEnergy[date][hour]:
+                    if energy["type"] == "solar":
+                        daily_solar += energy["energy"] * energy["costs_per_kWh"]
+                    elif energy["type"] == "grid":
+                        daily_grid += energy["energy"] * energy["costs_per_kWh"]
+                    elif energy["type"] == "hydro":
+                        daily_hydro += energy["energy"] * energy["costs_per_kWh"]
+                    elif energy["type"] == "accumulator":
+                        daily_accumulator += energy["energy"] * energy["costs_per_kWh"]
+            oldMonth = currentMonth
+        self.monthlyRevenue = d
+        return d
+    
     def plotGraph(self, size = (500,500)):
         """plotting the data from the PVGIS API
         """
