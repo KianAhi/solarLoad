@@ -35,8 +35,6 @@ class electricalGrid:
         
         return inv_costs
     
-<<<<<<< Updated upstream
-=======
     def calculate_revenue(self, startDate, endDate):
 
         for house in self.houses:
