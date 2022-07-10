@@ -53,14 +53,14 @@ class House:
             type (str): type of energy (e.g. 'grid', 'accumulator', 'solar', 'hydro')
         """
         date = date.strftime("%Y-%m-%d")
-        if type == "grid":
-            d = {"energy": energy, "type": type, "costs_per_kWh": self.GRID_USAGE_COSTS}
-        elif type == "hydro":
-            d = {"energy": energy, "type": type, "costs_per_kWh": self.HYDRO_USAGE_COSTS}
-        elif type == "solar":
-            d = {"energy": energy, "type": type, "costs_per_kWh": self.PV_USAGE_COSTS}
-        elif type == "accumulator":
-            d = {"energy": energy, "type": type, "costs_per_kWh": self.ACCUMULATOR_USAGE_COSTS}
+        if energy_type == "grid":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.GRID_USAGE_COSTS}
+        elif energy_type == "hydro":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.HYDRO_USAGE_COSTS}
+        elif energy_type == "solar":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.PV_USAGE_COSTS}
+        elif energy_type == "accumulator":
+            d = {"energy": energy, "type": energy_type, "costs_per_kWh": self.ACCUMULATOR_USAGE_COSTS}
 
         if date in self.usedEnergy.keys():
             if hour in self.usedEnergy[date].keys():
